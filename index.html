@@ -1,870 +1,914 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Compass, 
-  Grid3X3, 
-  Globe2, 
-  ThermometerSun, 
-  ArrowLeft, 
-  Info,
-  CheckCircle2,
-  XCircle,
-  PlaySquare,
-  ExternalLink,
-  Smartphone,
-  Map,
-  Ship,
-  EyeOff,
-  Sun,
-  MapPin, 
-  Clock,
-  Volume2,
-  Medal,
-  Award,
-  GraduationCap
-} from 'lucide-react';
-
-// --- DATOS DEL GLOSARIO ---
-const GLOSSARY = {
-  "Puntos Cardinales": "Son las 4 direcciones principales (Norte, Sur, Este y Oeste) que usamos en un mapa para no perdernos.",
-  "Brújula": "Es un instrumento con una aguja magnética que siempre apunta hacia el Norte. ¡Como magia magnética!",
-  "Cuadrícula": "Un conjunto de cuadrados formados por filas y columnas, ¡como un tablero de ajedrez o un cuaderno de matemáticas!",
-  "Coordenada": "Es la combinación de una letra y un número (ejemplo: A-3) que nos dice el lugar exacto de algo en una cuadrícula.",
-  "Filas": "Son las líneas de cuadrados que van de lado a lado (de Este a Oeste).",
-  "Columnas": "Son las líneas de cuadrados que van de arriba a abajo (de Norte a Sur).",
-  "Paralelos": "Líneas imaginarias que atraviesan la Tierra de lado a lado. Nos ayudan a medir la Latitud.",
-  "Ecuador": "El paralelo principal (Línea 0) que divide la Tierra en Hemisferio Norte y Hemisferio Sur.",
-  "Meridianos": "Líneas imaginarias que atraviesan la Tierra de arriba a abajo, de polo a polo. Nos ayudan a medir la Longitud y el tiempo.",
-  "Greenwich": "El meridiano principal (Línea 0) que divide la Tierra en Hemisferio Este y Hemisferio Oeste.",
-  "Hemisferio": "Significa 'mitad de una esfera'.",
-  "Tiempo": "Es cómo está el día hoy: si llueve, hace sol o hay viento.",
-  "Clima": "Es cómo se comporta el tiempo en un lugar durante muuuchos años.",
-  "Perpendicular": "Cuando los rayos del sol caen directos, ¡haciendo mucho calor!",
-  "Oblicuo": "Cuando los rayos del sol caen un poco inclinados, dando una temperatura suave."
-};
-
-export default function App() {
-  const [currentModule, setCurrentModule] = useState(null);
-  const [glossaryTerm, setGlossaryTerm] = useState(null);
-  
-  // SISTEMA DE PROGRESO Y MEDALLAS
-  const [completedModules, setCompletedModules] = useState({
-    mod1: false, mod2: false, mod3: false, mod4: false
-  });
-
-  const markCompleted = (modId) => {
-    setCompletedModules(prev => ({...prev, [modId]: true}));
-  };
-
-  const isAllCompleted = Object.values(completedModules).every(Boolean);
-
-  const Term = ({ word }) => (
-    <span 
-      onClick={() => setGlossaryTerm(word)}
-      className="inline-flex items-center gap-1 text-blue-700 font-bold border-b-2 border-dotted border-blue-500 cursor-pointer hover:bg-blue-100 rounded px-1 transition-colors"
-      title="Toca para saber qué significa"
-    >
-      {word} <Info size={14} className="text-blue-500" />
-    </span>
-  );
-
-  const goBack = () => {
-    setCurrentModule(null);
-    window.speechSynthesis.cancel(); // Detener el audio al salir
-  };
-
-  return (
-    <div className="min-h-screen bg-sky-50 font-sans text-gray-800 selection:bg-yellow-200 pb-12">
-      <header className="bg-white shadow-sm sticky top-0 z-50 p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {currentModule && (
-            <button onClick={goBack} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-              <ArrowLeft size={24} className="text-gray-700" />
-            </button>
-          )}
-          <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500 flex items-center gap-2">
-            ¡Exploradores del Mundo! 🌍
-          </h1>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto p-4 md:p-6">
-        {!currentModule ? (
-          <MainMenu 
-            onSelect={setCurrentModule} 
-            completedModules={completedModules} 
-            isAllCompleted={isAllCompleted} 
-          />
-        ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {currentModule === 'mod1' && <Module1 Term={Term} onBack={goBack} onWin={() => markCompleted('mod1')} />}
-            {currentModule === 'mod2' && <Module2 Term={Term} onBack={goBack} onWin={() => markCompleted('mod2')} />}
-            {currentModule === 'mod3' && <Module3 Term={Term} onBack={goBack} onWin={() => markCompleted('mod3')} />}
-            {currentModule === 'mod4' && <Module4 Term={Term} onBack={goBack} onWin={() => markCompleted('mod4')} />}
-            {currentModule === 'diploma' && <Diploma onBack={goBack} />}
-          </div>
-        )}
-      </main>
-
-      {/* MODAL DEL GLOSARIO */}
-      {glossaryTerm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl transform scale-100 animate-in zoom-in-95 duration-200">
-            <h3 className="text-2xl font-bold text-blue-600 mb-3 flex items-center gap-2">
-              <BookOpen size={24} /> Diccionario
-            </h3>
-            <p className="text-xl font-bold mb-2 text-gray-800">{glossaryTerm}</p>
-            <p className="text-gray-600 text-lg leading-relaxed">{GLOSSARY[glossaryTerm]}</p>
-            <button onClick={() => setGlossaryTerm(null)} className="mt-6 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-colors text-lg">
-              ¡Entendido! 👍
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// --- BOTÓN DE LECTURA EN VOZ ALTA ---
-function SpeakButton({ text }) {
-  const speak = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // Detener audios anteriores
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES'; // Español
-      utterance.rate = 0.9; // Un poco más lento para niños
-      window.speechSynthesis.speak(utterance);
-    } else {
-      alert("Tu navegador no soporta lectura en voz alta.");
-    }
-  };
-  return (
-    <button onClick={speak} className="inline-flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-800 p-2 rounded-full transition-all shadow-sm active:scale-95" title="Leer en voz alta">
-      <Volume2 size={20} />
-    </button>
-  );
-}
-
-// --- MENÚ PRINCIPAL CON MEDALLAS ---
-function MainMenu({ onSelect, completedModules, isAllCompleted }) {
-  const modules = [
-    { id: 'mod1', title: 'Puntos Cardinales', icon: Compass, color: 'bg-orange-500', shadow: 'shadow-orange-200', text: 'Aprende a usar la brújula', medalEmoji: '🧭' },
-    { id: 'mod2', title: 'Cuadrículas', icon: Grid3X3, color: 'bg-blue-500', shadow: 'shadow-blue-200', text: 'Encuentra tesoros en el mapa', medalEmoji: '⚓' },
-    { id: 'mod3', title: 'Líneas Invisibles', icon: Globe2, color: 'bg-green-500', shadow: 'shadow-green-200', text: 'Descubre paralelos y meridianos', medalEmoji: '🌍' },
-    { id: 'mod4', title: 'Zonas Climáticas', icon: ThermometerSun, color: 'bg-yellow-500', shadow: 'shadow-yellow-200', text: 'Viaja del calor al frío', medalEmoji: '🌡️' },
-  ];
-
-  return (
-    <div className="space-y-8">
-      {/* PANEL DE MEDALLAS */}
-      <div className="bg-white rounded-3xl p-6 shadow-md border-4 border-amber-200 flex flex-col items-center">
-        <h3 className="text-xl font-bold text-amber-600 mb-4 flex items-center gap-2"><Award /> Tus Medallas de Explorador</h3>
-        <div className="flex gap-4 sm:gap-8">
-          {modules.map(m => (
-            <div key={m.id} className="flex flex-col items-center gap-2">
-              <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 flex items-center justify-center text-3xl sm:text-4xl transition-all duration-500 shadow-inner
-                ${completedModules[m.id] ? 'bg-gradient-to-br from-yellow-300 to-amber-500 border-yellow-200 shadow-yellow-500/50 scale-110 animate-in zoom-in' : 'bg-gray-100 border-gray-200 grayscale opacity-50'}`}
-              >
-                {m.medalEmoji}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {isAllCompleted && (
-        <div className="animate-bounce">
-          <button 
-            onClick={() => onSelect('diploma')}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-4 border-4 border-white"
-          >
-            <GraduationCap size={48} />
-            <div className="text-left">
-              <h2 className="text-3xl font-black">¡GRADUACIÓN! 🎓</h2>
-              <p className="text-purple-100 font-bold text-lg">Tienes las 4 medallas. Toca aquí para tu diploma.</p>
-            </div>
-          </button>
-        </div>
-      )}
-
-      <div className="text-center space-y-4 my-8">
-        <h2 className="text-4xl md:text-5xl font-black text-gray-800">¿Qué quieres explorar hoy?</h2>
-        <p className="text-xl text-gray-600">Toca una aventura y gana su medalla al terminar.</p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {modules.map((mod) => {
-          const Icon = mod.icon;
-          const isDone = completedModules[mod.id];
-          return (
-            <button
-              key={mod.id}
-              onClick={() => onSelect(mod.id)}
-              className={`group flex items-center p-6 bg-white rounded-3xl shadow-xl ${mod.shadow} hover:scale-105 hover:shadow-2xl transition-all duration-300 border-4 ${isDone ? 'border-amber-400' : 'border-transparent'} text-left w-full relative overflow-hidden`}
-            >
-              {isDone && <div className="absolute top-2 right-2 text-2xl animate-pulse">🌟</div>}
-              <div className={`${mod.color} p-4 rounded-2xl text-white mr-6 group-hover:rotate-12 transition-transform`}>
-                <Icon size={48} />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-1">{mod.title}</h3>
-                <p className="text-gray-500 text-lg">{mod.text}</p>
-              </div>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ... Resto de tu código (Module1, NatureClues, TreasureMapGame, Module2, GameNavalBattle, etc.) ...
-// INSERTO EL CÓDIGO ACTUALIZADO A CONTINUACIÓN:
-
-const BookOpen = ({size}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
-
-/* --- MÓDULO 1: PUNTOS CARDINALES --- */
-function Module1({ Term, onBack, onWin }) {
-  const introText = "Los Puntos Cardinales son las direcciones mágicas que nos ayudan a saber dónde estamos en cualquier parte del mundo. Son como una brújula invisible para los exploradores. La Tierra es un imán gigante. La Brújula tiene una pequeña aguja que es atraída por la Tierra y siempre apunta hacia el Norte.";
-
-  return (
-    <div className="space-y-8">
-      <div className="bg-orange-100 rounded-3xl p-6 border-4 border-orange-200 relative">
-        <div className="absolute top-4 right-4"><SpeakButton text={introText} /></div>
-        <h2 className="text-3xl font-black text-orange-600 mb-4 flex items-center gap-3">
-          <Compass size={36} /> Los Puntos Cardinales
-        </h2>
-        <p className="text-xl leading-relaxed text-gray-700 pr-12">
-          Los <Term word="Puntos Cardinales" /> son las direcciones mágicas que nos ayudan a saber dónde estamos en cualquier parte del mundo. 
-          ¡Son como una brújula invisible para los exploradores! 🧭
-        </p>
-        <div className="my-6 p-4 bg-white rounded-2xl shadow-sm text-lg space-y-3">
-          <p>La Tierra es un imán gigante. La <Term word="Brújula" /> tiene una pequeña aguja que es atraída por la Tierra y <strong>siempre apunta hacia el Norte</strong>.</p>
-          <ul className="list-disc pl-6 space-y-2 font-bold text-orange-700">
-            <li>N = Norte (Arriba)</li>
-            <li>S = Sur (Abajo)</li>
-            <li>E = Este (A la derecha)</li>
-            <li>O = Oeste (A la izquierda)</li>
-          </ul>
-        </div>
-      </div>
-
-      <NatureClues />
-      <AnimatedCompass />
-      <TreasureMapGame onWin={onWin} />
-
-      <VideoSection links={[{ title: "La Brújula y los Puntos", url: "https://www.youtube.com/watch?v=xZ-qHn8mOlc" }, { title: "Puntos Cardinales", url: "https://www.youtube.com/watch?v=vfng3DwpCkA" }]} />
-      <BackButton onBack={onBack} />
-    </div>
-  );
-}
-
-function NatureClues() {
-  const [timeOfDay, setTimeOfDay] = useState('morning'); 
-  return (
-    <div className="bg-sky-100 rounded-3xl p-6 shadow-xl border-t-8 border-sky-400">
-      <div className="flex justify-between items-start">
-        <h3 className="text-2xl font-bold mb-4 flex items-center gap-2 text-sky-800">
-          <Sun className="text-yellow-500" size={32} /> Pistas de la Naturaleza
-        </h3>
-        <SpeakButton text="Si no tienes una brújula, puedes mirar al cielo. Al amanecer, el Sol siempre nace por el Este. Al atardecer, el Sol se oculta por el Oeste." />
-      </div>
-      <p className="text-lg text-sky-900 mb-6 font-medium">Si no tienes una brújula, ¡no te preocupes! El Sol y el paisaje nos dan pistas mágicas para ubicarnos:</p>
-
-      <div className="flex justify-center gap-4 mb-6">
-        <button onClick={() => setTimeOfDay('morning')} className={`py-3 px-6 rounded-2xl font-black transition-all border-b-4 ${timeOfDay === 'morning' ? 'bg-yellow-400 text-yellow-900 border-yellow-500 scale-105 shadow-md' : 'bg-white text-gray-400 border-gray-200'}`}>☀️ Mañana</button>
-        <button onClick={() => setTimeOfDay('evening')} className={`py-3 px-6 rounded-2xl font-black transition-all border-b-4 ${timeOfDay === 'evening' ? 'bg-orange-500 text-white border-orange-600 scale-105 shadow-md' : 'bg-white text-gray-400 border-gray-200'}`}>🌇 Tarde</button>
-      </div>
-
-      <div className={`relative h-56 rounded-2xl overflow-hidden border-4 border-white shadow-inner flex items-end justify-between px-4 pb-4 transition-colors duration-1000 ${timeOfDay === 'morning' ? 'bg-gradient-to-b from-blue-300 to-green-200' : 'bg-gradient-to-b from-indigo-500 to-orange-300'}`}>
-        <div className="text-center z-10 w-24">
-          <span className="text-5xl block animate-pulse">🌊</span>
-          <span className="font-black text-white drop-shadow-md text-xl">OESTE</span>
-          <span className="text-sm font-bold block text-blue-100 drop-shadow-sm">El Mar</span>
-        </div>
-        <div className="text-center z-10 transform -translate-y-2">
-          <span className="text-6xl block hover:scale-110 transition-transform">🧍</span>
-          <span className="font-black text-white drop-shadow-md bg-black/20 px-3 py-1 rounded-full text-sm">TÚ</span>
-        </div>
-        <div className="text-center z-10 w-24">
-          <span className="text-5xl block drop-shadow-lg">⛰️</span>
-          <span className="font-black text-white drop-shadow-md text-xl">ESTE</span>
-          <span className="text-sm font-bold block text-yellow-100 drop-shadow-sm">Montañas</span>
-        </div>
-        <div className={`absolute text-7xl transition-all duration-1000 ease-in-out drop-shadow-2xl z-0 ${timeOfDay === 'morning' ? 'right-8 top-8 opacity-100 scale-100' : 'left-8 top-16 opacity-90 scale-90'}`}>
-          {timeOfDay === 'morning' ? '☀️' : '🌇'}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AnimatedCompass() {
-  const [heading, setHeading] = useState(0);
-  const [permission, setPermission] = useState('prompt');
-
-  const requestCompassPermission = async () => {
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      try {
-        const response = await DeviceOrientationEvent.requestPermission();
-        setPermission(response);
-        if (response === 'granted') window.addEventListener('deviceorientation', handleOrientation);
-      } catch (error) { setPermission('denied'); }
-    } else {
-      setPermission('granted');
-      window.addEventListener('deviceorientationabsolute', handleOrientation);
-      window.addEventListener('deviceorientation', handleOrientation);
-    }
-  };
-
-  const handleOrientation = (event) => {
-    let alpha = event.alpha; let webkitCompassHeading = event.webkitCompassHeading; 
-    if (webkitCompassHeading) setHeading(webkitCompassHeading);
-    else if (alpha !== null) setHeading(360 - alpha);
-  };
-
-  useEffect(() => {
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation);
-      window.removeEventListener('deviceorientationabsolute', handleOrientation);
-    };
-  }, []);
-
-  return (
-    <div className="bg-white rounded-3xl p-6 shadow-xl border-t-8 border-orange-400 flex flex-col items-center mt-8">
-      <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Smartphone className="text-orange-500" /> Tu propia Brújula</h3>
-      {permission !== 'granted' && <button onClick={requestCompassPermission} className="mb-6 py-2 px-6 bg-orange-500 text-white font-bold rounded-xl shadow-md">Activar Brújula</button>}
-      <div className="relative w-48 h-48 rounded-full border-8 border-orange-500 shadow-inner bg-orange-50 flex justify-center items-center">
-        <div className="absolute top-2 font-black text-xl text-red-500">N</div>
-        <div className="absolute bottom-2 font-black text-xl text-gray-500">S</div>
-        <div className="absolute right-3 font-black text-xl text-gray-500">E</div>
-        <div className="absolute left-3 font-black text-xl text-gray-500">O</div>
-        <div className="relative w-full h-full transition-transform duration-300 ease-out flex justify-center" style={{ transform: `rotate(${-heading}deg)` }}>
-          <div className="absolute top-[10%] w-0 h-0 border-l-[10px] border-r-[10px] border-b-[60px] border-l-transparent border-r-transparent border-b-red-600"></div>
-          <div className="absolute bottom-[10%] w-0 h-0 border-l-[10px] border-r-[10px] border-t-[60px] border-l-transparent border-r-transparent border-t-gray-700"></div>
-          <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-orange-500 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TreasureMapGame({ onWin }) {
-  const mapGrid = [
-    ['W','W','W','W','W','W','W','W'],
-    ['W','T','S','S','M','G','G','W'],
-    ['W','M','M','S','M','G','M','W'],
-    ['W','G','S','S','F','G','G','W'],
-    ['W','G','M','M','M','M','M','W'],
-    ['W','G','G','G','S','S','G','W'],
-    ['W','M','M','M','S','M','M','W'],
-    ['W','P','S','S','S','G','G','W']
-  ];
-  const startPos = { x: 1, y: 7 }; const treasurePos = { x: 1, y: 1 };
-  const [pos, setPos] = useState(startPos); const [path, setPath] = useState([startPos]);
-  const [won, setWon] = useState(false); const [message, setMessage] = useState("¡Encuentra el tesoro ❌ guiando al explorador!");
-
-  const getCellDetails = (char) => {
-    switch(char) {
-      case 'W': return { bg: 'bg-blue-400', icon: '🌊', name: 'el mar profundo' };
-      case 'M': return { bg: 'bg-stone-500', icon: '⛰️', name: 'las montañas altas' };
-      case 'F': return { bg: 'bg-green-800', icon: '🌲', name: 'el bosque espeso' };
-      case 'S': return { bg: 'bg-yellow-200', icon: '' };
-      case 'G': return { bg: 'bg-green-400', icon: '🌿' };
-      case 'T': return { bg: 'bg-yellow-300', icon: '❌' };
-      case 'P': return { bg: 'bg-yellow-200', icon: '' };
-      default: return { bg: 'bg-white', icon: '' };
-    }
-  };
-
-  const move = (direction) => {
-    if (won) return;
-    let { x, y } = pos;
-    if (direction === 'Norte') y -= 1; if (direction === 'Sur') y += 1;
-    if (direction === 'Este') x += 1; if (direction === 'Oeste') x -= 1;
-    if (y < 0 || y >= mapGrid.length || x < 0 || x >= mapGrid[0].length) { setMessage("¡Cuidado! Te sales del mapa 🗺️."); return; }
-    const nextCell = mapGrid[y][x]; const cellData = getCellDetails(nextCell);
-    if (['W', 'M', 'F'].includes(nextCell)) { setMessage(`¡No puedes pasar por ${cellData.name}!`); return; }
-
-    const newPos = { x, y };
-    setMessage("¡Buen rumbo! Sigue explorando 🧭."); setPos(newPos);
-    setPath([...path, newPos]);
-
-    if (newPos.x === treasurePos.x && newPos.y === treasurePos.y) {
-      setWon(true); setMessage("¡TESORO ENCONTRADO! 👑💰 Eres un experto navegante.");
-      if(onWin) onWin();
-    }
-  };
-
-  return (
-    <div className="bg-[#f5e4c3] rounded-3xl p-4 md:p-8 shadow-2xl border-4 border-amber-800 relative mt-8">
-      <h3 className="text-3xl font-black mb-2 text-center text-amber-900 flex justify-center items-center gap-3"><Map className="text-red-700" size={36} /> La Isla del Tesoro</h3>
-      <p className="text-center text-amber-900 font-bold text-lg mb-6 h-14">{message}</p>
-      <div className="flex justify-center mb-8 relative">
-        <div className="grid gap-0 border-8 border-amber-900 rounded-xl overflow-hidden shadow-2xl bg-blue-400" style={{ gridTemplateColumns: `repeat(${mapGrid[0].length}, minmax(0, 1fr))` }}>
-          {mapGrid.map((row, y) => row.map((char, x) => {
-              const cellData = getCellDetails(char); const isPlayer = pos.x === x && pos.y === y;
-              const isTreasure = treasurePos.x === x && treasurePos.y === y; const isPath = path.some(p => p.x === x && p.y === y);
-              return (
-                <div key={`${x}-${y}`} className={`w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center relative ${cellData.bg} border-t border-l border-white/20`}>
-                  {cellData.icon && !isTreasure && <span className="absolute opacity-90 text-xl md:text-3xl">{cellData.icon}</span>}
-                  {isPath && !isPlayer && !isTreasure && <div className="absolute w-2 h-2 bg-amber-900/40 rounded-full"></div>}
-                  {isTreasure && !isPlayer && <span className="absolute z-10 text-red-600 font-black text-2xl md:text-3xl animate-pulse">❌</span>}
-                  {isPlayer && <span className="absolute z-20 text-3xl md:text-4xl animate-bounce">🚶‍♂️</span>}
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-      {!won ? (
-        <div className="max-w-[280px] mx-auto bg-amber-900/10 p-4 rounded-full border-4 border-amber-900/20">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="col-start-2"><button onClick={() => move('Norte')} className="w-full py-4 bg-red-600 text-white font-black rounded-t-2xl">Norte</button></div>
-            <div className="col-start-1 row-start-2"><button onClick={() => move('Oeste')} className="w-full py-4 bg-stone-600 text-white font-black rounded-l-2xl">Oeste</button></div>
-            <div className="col-start-2 row-start-2 flex items-center justify-center bg-amber-100 rounded-full border-4 border-amber-900"><Compass className="text-red-700" size={36} /></div>
-            <div className="col-start-3 row-start-2"><button onClick={() => move('Este')} className="w-full py-4 bg-stone-600 text-white font-black rounded-r-2xl">Este</button></div>
-            <div className="col-start-2 row-start-3"><button onClick={() => move('Sur')} className="w-full py-4 bg-stone-600 text-white font-black rounded-b-2xl">Sur</button></div>
-          </div>
-        </div>
-      ) : (
-        <div className="text-center p-8 bg-gradient-to-b from-yellow-300 to-yellow-500 rounded-3xl border-8 border-yellow-600 shadow-2xl animate-in zoom-in">
-          <h4 className="text-4xl font-black text-yellow-900 mb-4">¡Misión Cumplida! 🏆</h4>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* --- MÓDULO 2: CUADRÍCULAS --- */
-function Module2({ Term, onBack, onWin }) {
-  const introText = "Una Cuadrícula es como un gran tablero de ajedrez gigante. Nos sirve para ubicar elementos usando coordenadas. Para no perdernos, usamos letras en las columnas que van de arriba a abajo, y números en las filas que van de lado a lado. Por ejemplo, B-3 significa Columna B, Fila 3.";
-  return (
-    <div className="space-y-8">
-      <div className="bg-blue-100 rounded-3xl p-6 border-4 border-blue-200 relative">
-        <div className="absolute top-4 right-4"><SpeakButton text={introText} /></div>
-        <h2 className="text-3xl font-black text-blue-600 mb-4 flex items-center gap-3">
-          <Grid3X3 size={36} /> Jugando con Cuadrículas
-        </h2>
-        <p className="text-xl leading-relaxed text-gray-700 pr-12">
-          Una <Term word="Cuadrícula" /> es como un tablero de ajedrez. Nos sirve para ubicar elementos usando <Term word="Coordenada" />s.
-        </p>
-        <div className="my-6 p-4 bg-white rounded-2xl shadow-sm text-lg space-y-3">
-          <p>Para no perdernos, usamos letras y números:</p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li>Las <strong>letras</strong> suelen estar en las <Term word="Columnas" /> (arriba abajo).</li>
-            <li>Los <strong>números</strong> suelen estar en las <Term word="Filas" /> (lado a lado).</li>
-          </ul>
-        </div>
-      </div>
-
-      <GameNavalBattle onWin={onWin} />
-      <BackButton onBack={onBack} />
-    </div>
-  );
-}
-
-function GameNavalBattle({ onWin }) {
-  const [gameState, setGameState] = useState('start'); 
-  const [gameMode, setGameMode] = useState(''); // '1P' or '2P'
-  const [ships, setShips] = useState([]);
-  const [shots, setShots] = useState([]);
-  const [feedback, setFeedback] = useState('¡Prepara tus cañones!');
-
-  const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-  const rows = [1, 2, 3, 4, 5, 6, 7, 8];
-  
-  const shipTypes = [
-    { id: 1, name: 'Galeón Pirata', emoji: '🏴‍☠️' },
-    { id: 2, name: 'Acorazado', emoji: '🚢' },
-    { id: 3, name: 'Fragata', emoji: '⛵' },
-    { id: 4, name: 'Submarino', emoji: '🚤' },
-    { id: 5, name: 'Balsa', emoji: '🛶' }
-  ];
-  const MAX_SHIPS = shipTypes.length;
-  const MAX_SHOTS = 15;
-
-  // IA: Coloca barcos al azar para 1 Jugador
-  const startOnePlayerMode = () => {
-    const randomShips = [];
-    const tempCoords = [];
-    while (randomShips.length < MAX_SHIPS) {
-      const rCol = cols[Math.floor(Math.random() * cols.length)];
-      const rRow = rows[Math.floor(Math.random() * rows.length)];
-      const coord = `${rCol}-${rRow}`;
-      if (!tempCoords.includes(coord)) {
-        tempCoords.push(coord);
-        randomShips.push({ coord, type: shipTypes[randomShips.length] });
-      }
-    }
-    setShips(randomShips);
-    setGameMode('1P');
-    setGameState('playing');
-    setFeedback('¡Barbanegra ocultó sus barcos! ¡Dispara!');
-  };
-
-  const handleCellClick = (coord) => {
-    if (gameState === 'hiding') {
-      const existingShip = ships.find(s => s.coord === coord);
-      if (existingShip) {
-        setShips(ships.filter(s => s.coord !== coord));
-      } else if (ships.length < MAX_SHIPS) {
-        setShips([...ships, { coord, type: shipTypes[ships.length] }]);
-      }
-    } else if (gameState === 'playing') {
-      if (shots.find(s => s.coord === coord)) return; 
-      if (shots.length >= MAX_SHOTS) return; 
-      
-      const hitShip = ships.find(s => s.coord === coord);
-      const newShots = [...shots, { coord, hit: !!hitShip, ship: hitShip }];
-      setShots(newShots);
-
-      if (hitShip) {
-        setFeedback(`¡KABOOM! 💥 Hundiste un barco en ${coord}`);
-      } else {
-        setFeedback(`¡Agua! 🌊 Disparo fallido en ${coord}.`);
-      }
-
-      const hits = newShots.filter(s => s.hit).length;
-      if (hits === MAX_SHIPS) {
-        setFeedback("¡TODOS LOS BARCOS HUNDIDOS!");
-        setTimeout(() => { setGameState('over'); if(onWin) onWin(); }, 1500);
-      } else if (newShots.length >= MAX_SHOTS) {
-        setFeedback("¡SE ACABARON LOS MISILES!");
-        setTimeout(() => setGameState('lose'), 1500);
-      }
-    }
-  };
-
-  const resetGame = () => {
-    setGameState('start'); setGameMode(''); setShips([]); setShots([]); setFeedback('¡Prepara tus cañones!');
-  };
-
-  const renderGrid = () => (
-    <div className="relative mx-auto bg-amber-900 p-2 sm:p-4 rounded-xl shadow-2xl border-4 sm:border-8 border-amber-950 max-w-fit">
-      <div className="grid grid-cols-9 gap-1 sm:gap-1.5 relative z-10">
-        <div className="w-7 h-7 sm:w-10 sm:h-10"></div>
-        {cols.map(c => (
-          <div key={`col-${c}`} className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center font-black text-amber-200 bg-amber-950/50 rounded">{c}</div>
-        ))}
-        {rows.map(r => (
-          <React.Fragment key={`row-${r}`}>
-            <div className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center font-black text-amber-200 bg-amber-950/50 rounded">{r}</div>
-            {cols.map(c => {
-              const coord = `${c}-${r}`;
-              const shipObj = ships.find(s => s.coord === coord);
-              const shotInfo = shots.find(s => s.coord === coord);
-              let content = ''; let bgClass = 'bg-cyan-500 hover:bg-cyan-400 cursor-pointer';
-
-              if (gameState === 'hiding') {
-                if (shipObj) { content = shipObj.type.emoji; bgClass = 'bg-blue-400'; }
-              } else if (gameState === 'playing' || gameState === 'over' || gameState === 'lose') {
-                if (shotInfo) {
-                  if (shotInfo.hit) { content = '💥'; bgClass = 'bg-red-600'; }
-                  else { content = '🌊'; bgClass = 'bg-blue-900/80'; }
-                } else if (gameState === 'lose' && shipObj) {
-                  content = <span className="opacity-50">{shipObj.type.emoji}</span>; bgClass = 'bg-slate-600';
-                }
-              }
-              return (
-                <div key={coord} onClick={() => handleCellClick(coord)} className={`w-7 h-7 sm:w-10 sm:h-10 rounded flex items-center justify-center text-xl transition-all border border-white/20 ${bgClass}`}>{content}</div>
-              )
-            })}
-          </React.Fragment>
-        ))}
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="bg-white rounded-3xl p-4 sm:p-8 shadow-2xl border-t-8 border-blue-800 relative">
-      <h3 className="text-3xl font-black mb-6 text-center text-blue-900 flex justify-center items-center gap-3"><Ship className="text-blue-700" size={36} /> Gran Batalla Naval</h3>
-
-      {gameState === 'start' && (
-        <div className="text-center py-8">
-          <h4 className="font-bold text-xl text-blue-800 mb-6">Elige cómo quieres jugar:</h4>
-          <div className="flex flex-col gap-4 max-w-sm mx-auto">
-             <button onClick={startOnePlayerMode} className="p-4 bg-purple-600 text-white rounded-xl font-bold text-lg hover:bg-purple-500 shadow-md flex items-center justify-center gap-2">
-               🤖 1 Jugador (vs Computadora)
-             </button>
-             <button onClick={() => {setGameMode('2P'); setGameState('hiding');}} className="p-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-500 shadow-md flex items-center justify-center gap-2">
-               👥 2 Jugadores (Con un amigo)
-             </button>
-          </div>
-        </div>
-      )}
-
-      {gameState === 'hiding' && (
-        <div className="animate-in fade-in">
-          <div className="bg-amber-100 p-4 mb-6 rounded-xl"><p className="text-amber-800 font-bold">JUGADOR 1: Oculta 5 barcos. ¡Que el J2 no mire!</p></div>
-          {renderGrid()}
-          {ships.length === MAX_SHIPS && (
-            <div className="mt-8 text-center"><button onClick={() => setGameState('pass')} className="px-10 py-4 bg-green-500 text-white rounded-full font-black text-xl hover:bg-green-400">Pasar tablet</button></div>
-          )}
-        </div>
-      )}
-
-      {gameState === 'pass' && (
-        <div className="text-center py-16 bg-slate-900 rounded-3xl"><EyeOff size={80} className="text-red-500 mx-auto mb-6" /><h4 className="text-4xl font-black text-white mb-4">¡JUGADOR 2!</h4><button onClick={() => setGameState('playing')} className="px-10 py-4 bg-red-600 text-white rounded-full font-black text-xl hover:bg-red-500">ESTOY LISTO</button></div>
-      )}
-
-      {gameState === 'playing' && (
-        <div className="animate-in fade-in">
-          <div className="bg-red-50 p-4 mb-6 rounded-xl"><p className="text-red-800 font-bold">¡FUEGO! Usa las columnas y filas para hundir la flota. {gameMode === '1P' ? 'Barbanegra te espera.' : ''}</p></div>
-          <p className="font-mono font-bold text-xl text-center text-blue-800 mb-4">{feedback}</p>
-          {renderGrid()}
-          <div className="mt-8 flex justify-between px-6 py-4 bg-gray-100 rounded-2xl font-bold">
-            <span className="text-gray-500">Misiles: <span className="text-red-500">{shots.length}/{MAX_SHOTS}</span></span>
-            <span className="text-red-600">Hundidos: {shots.filter(s => s.hit).length}/{MAX_SHIPS}</span>
-          </div>
-        </div>
-      )}
-
-      {gameState === 'over' && (
-        <div className="text-center p-10 bg-yellow-400 rounded-3xl mt-6"><h4 className="text-4xl font-black mb-4">¡VICTORIA ÉPICA!</h4><button onClick={resetGame} className="px-8 py-3 bg-white rounded-full font-bold">Jugar la Revancha</button></div>
-      )}
-      
-      {gameState === 'lose' && (
-        <div className="text-center p-10 bg-slate-800 rounded-3xl mt-6 text-white"><h4 className="text-4xl font-black mb-4 text-red-400">¡DERROTA!</h4><button onClick={resetGame} className="px-8 py-3 bg-red-600 rounded-full font-bold">Intentarlo otra vez</button></div>
-      )}
-    </div>
-  );
-}
-
-/* --- MÓDULO 3: LÍNEAS INVISIBLES --- */
-function Module3({ Term, onBack, onWin }) {
-  const introText = "Como aprendimos con las cuadrículas, la Tierra también tiene su propia red gigante de líneas invisibles para encontrar cualquier lugar. Se llaman Paralelos y Meridianos. Los paralelos son las líneas acostadas, como el Ecuador. Los meridianos son las líneas de pie, como el meridiano de Greenwich.";
-  
-  return (
-    <div className="space-y-8">
-      <div className="bg-green-100 rounded-3xl p-6 border-4 border-green-200 relative">
-        <div className="absolute top-4 right-4"><SpeakButton text={introText} /></div>
-        <h2 className="text-3xl font-black text-green-600 mb-4 flex items-center gap-3"><Globe2 size={36} /> Las Líneas de la Tierra</h2>
-        <p className="text-xl leading-relaxed text-gray-700 pr-12">
-          La Tierra tiene su propia red gigante de líneas invisibles para encontrar cualquier lugar. ¡Se llaman <Term word="Paralelos" /> y <Term word="Meridianos" />!
-        </p>
-        <div className="my-6 grid md:grid-cols-2 gap-6">
-          <div className="p-5 bg-white rounded-2xl shadow-md border-l-8 border-red-500">
-            <h4 className="font-black text-2xl text-red-600 mb-3">🍔 Paralelos</h4>
-            <p className="text-gray-700">Son las líneas "acostadas", ¡como las capas de una hamburguesa! Atraviesan la Tierra de lado a lado. El principal es el <Term word="Ecuador" />.</p>
-          </div>
-          <div className="p-5 bg-white rounded-2xl shadow-md border-l-8 border-yellow-500">
-            <h4 className="font-black text-2xl text-yellow-600 mb-3">🍊 Meridianos</h4>
-            <p className="text-gray-700">Son las líneas "de pie", van de Polo a Polo, ¡como los gajos de una naranja! El principal es <Term word="Greenwich" />.</p>
-          </div>
-        </div>
-      </div>
-      <GameCoordinateFinder onWin={onWin} />
-      <GameTimeZones3D />
-      <BackButton onBack={onBack} />
-    </div>
-  );
-}
-
-function GameCoordinateFinder({ onWin }) {
-  const [level, setLevel] = useState(0);
-  const [message, setMessage] = useState('');
-  const [status, setStatus] = useState('playing'); 
-
-  const missions = [
-    { id: 1, target: 'Pingüino', emoji: '🐧', lat: 'Sur', lon: 'Oeste' },
-    { id: 2, target: 'Oso Polar', emoji: '🐻‍❄️', lat: 'Norte', lon: 'Este' },
-    { id: 3, target: 'Tesoro', emoji: '💎', lat: 'Sur', lon: 'Este' }
-  ];
-  const currentMission = missions[level];
-
-  const handleSelection = (selectedLat, selectedLon) => {
-    if (selectedLat === currentMission.lat && selectedLon === currentMission.lon) {
-      setStatus('correct'); setMessage(`¡Encontraste el ${currentMission.target}! 🎉`);
-      setTimeout(() => {
-        if (level < missions.length - 1) { setLevel(l => l + 1); setStatus('playing'); setMessage(''); } 
-        else { setMessage('¡Completado! Eres experto en coordenadas.'); if(onWin) onWin(); }
-      }, 2000);
-    } else { setMessage('Ahí no está. Revisa si es Norte/Sur y Este/Oeste. 🕵️‍♂️'); }
-  };
-
-  return (
-    <div className="bg-white rounded-3xl p-6 shadow-xl border-t-8 border-green-500 mb-8">
-      <h3 className="text-2xl font-black mb-4 text-center text-green-700"><MapPin size={28} className="inline mr-2"/> Rescate Geográfico</h3>
-      {level < missions.length && <p className="text-center font-bold text-gray-700 mb-4">Encuentra: {currentMission.target} {currentMission.emoji} ({currentMission.lat} / {currentMission.lon})</p>}
-      <div className="relative w-full max-w-[280px] mx-auto aspect-square rounded-full border-4 border-blue-400 bg-blue-100 mb-6">
-        <div className="absolute top-1/2 left-0 w-full h-1.5 bg-red-500 -translate-y-1/2 z-10 shadow-sm"></div>
-        <div className="absolute left-1/2 top-0 w-1.5 h-full bg-yellow-500 -translate-x-1/2 z-10 shadow-sm"></div>
-        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 z-0">
-          <button onClick={() => handleSelection('Norte', 'Oeste')} disabled={status === 'correct'} className="hover:bg-blue-300/40 p-4">{status === 'correct' && currentMission.lat === 'Norte' && currentMission.lon === 'Oeste' && (<span className="text-5xl animate-bounce">{currentMission.emoji}</span>)}</button>
-          <button onClick={() => handleSelection('Norte', 'Este')} disabled={status === 'correct'} className="hover:bg-blue-300/40 p-4">{status === 'correct' && currentMission.lat === 'Norte' && currentMission.lon === 'Este' && (<span className="text-5xl animate-bounce">{currentMission.emoji}</span>)}</button>
-          <button onClick={() => handleSelection('Sur', 'Oeste')} disabled={status === 'correct'} className="hover:bg-blue-300/40 p-4">{status === 'correct' && currentMission.lat === 'Sur' && currentMission.lon === 'Oeste' && (<span className="text-5xl animate-bounce">{currentMission.emoji}</span>)}</button>
-          <button onClick={() => handleSelection('Sur', 'Este')} disabled={status === 'correct'} className="hover:bg-blue-300/40 p-4">{status === 'correct' && currentMission.lat === 'Sur' && currentMission.lon === 'Este' && (<span className="text-5xl animate-bounce">{currentMission.emoji}</span>)}</button>
-        </div>
-      </div>
-      <p className={`text-center font-bold h-8 ${status === 'correct' ? 'text-green-600' : 'text-gray-600'}`}>{message}</p>
-    </div>
-  );
-}
-
-function GameTimeZones3D() {
-  const [rotation, setRotation] = useState(0);
-  const rotateEarth = () => setRotation(prev => prev + 90); 
-  const normalize = (angle) => ((angle % 360) + 360) % 360;
-  const cGlobal = normalize(rotation + 90); const jGlobal = normalize(rotation + 270);
-  const isDayInChile = cGlobal > 0 && cGlobal < 180; const isDayInJapan = jGlobal > 0 && jGlobal < 180;
-
-  return (
-    <div className="bg-slate-900 rounded-3xl p-6 shadow-xl border-t-8 border-indigo-500 text-white overflow-hidden relative">
-      <h3 className="text-2xl font-black mb-4 text-center text-indigo-300">El Baile de los Meridianos</h3>
-      <div className="flex flex-col items-center justify-center gap-12 mb-8 relative z-10">
-        <div className="relative flex justify-center items-center w-full">
-          <div className="absolute right-0 sm:-right-8 top-1/2 -translate-y-1/2 z-20"><span className="text-7xl animate-pulse">☀️</span></div>
-          <div className="relative w-56 h-56 perspective-[1000px]">
-            <div className="absolute inset-0 rounded-full bg-blue-600 shadow-[inset_40px_0_60px_rgba(0,0,0,0.9)]"></div>
-            <div className="absolute inset-0 transition-transform duration-1000 ease-in-out" style={{ transformStyle: 'preserve-3d', transform: `rotateY(${rotation}deg)` }}>
-              <div className="absolute top-[60%] left-1/2 transition-opacity duration-1000" style={{ transform: `translate(-50%, -50%) rotateY(90deg) translateZ(112px)` }}>🇨🇱</div>
-              <div className="absolute top-[30%] left-1/2 transition-opacity duration-1000" style={{ transform: `translate(-50%, -50%) rotateY(270deg) translateZ(112px)` }}>🇯🇵</div>
-            </div>
-            <div className="absolute inset-0 rounded-full shadow-[inset_40px_0_60px_rgba(0,0,0,0.6)] pointer-events-none"></div>
-          </div>
-        </div>
-        <div className="w-full max-w-md text-center">
-          <div className="grid grid-cols-2 gap-4 w-full mb-6">
-            <div className={`p-4 rounded-2xl ${isDayInChile ? 'bg-sky-200 text-sky-900' : 'bg-slate-800 text-slate-300'}`}><p className="font-black">🇨🇱 Chile</p><div className="text-4xl">{isDayInChile ? '☀️' : '🌙'}</div></div>
-            <div className={`p-4 rounded-2xl ${isDayInJapan ? 'bg-sky-200 text-sky-900' : 'bg-slate-800 text-slate-300'}`}><p className="font-black">🇯🇵 Japón</p><div className="text-4xl">{isDayInJapan ? '☀️' : '🌙'}</div></div>
-          </div>
-          <button onClick={rotateEarth} className="w-full py-4 bg-indigo-500 rounded-full font-black text-xl hover:bg-indigo-400 transition-all">Girar la Tierra 🌍</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* --- MÓDULO 4: ZONAS CLIMÁTICAS --- */
-function Module4({ Term, onBack, onWin }) {
-  const introText = "El clima no es igual en todos lados. En la Zona Cálida, cerca del Ecuador, los rayos del sol caen directos y hace calor todo el año. En la Zona Templada los rayos caen inclinados y hay cuatro estaciones. En la Zona Fría, en los polos, hace mucho hielo porque los rayos casi no llegan.";
-  return (
-    <div className="space-y-8">
-      <div className="bg-yellow-100 rounded-3xl p-6 border-4 border-yellow-200 relative">
-        <div className="absolute top-4 right-4"><SpeakButton text={introText} /></div>
-        <h2 className="text-3xl font-black text-yellow-600 mb-4 flex items-center gap-3"><ThermometerSun size={36} /> Zonas Climáticas</h2>
-        <div className="mt-8 space-y-6">
-          <div className="bg-red-50 p-4 rounded-2xl border-l-8 border-red-500 shadow-md">
-            <h4 className="font-black text-red-600 text-2xl mb-2">🥵 Zona Cálida</h4>
-            <p>🇧🇷 Brasil, 🇨🇷 Costa Rica. Selvas, sabanas y mucho calor. Rayos <Term word="Perpendicular" />es.</p>
-          </div>
-          <div className="bg-green-50 p-4 rounded-2xl border-l-8 border-green-500 shadow-md">
-             <h4 className="font-black text-green-600 text-2xl mb-2">😎 Zona Templada</h4>
-             <p>🇨🇱 Chile, 🇪🇸 España. Cuatro estaciones marcadas. Rayos <Term word="Oblicuo" />s.</p>
-          </div>
-          <div className="bg-blue-50 p-4 rounded-2xl border-l-8 border-blue-500 shadow-md">
-             <h4 className="font-black text-blue-600 text-2xl mb-2">🥶 Zona Fría</h4>
-             <p>🇦🇶 Antártica, 🇨🇦 Canadá. Hielo, osos polares. Casi no llega el Sol.</p>
-          </div>
-        </div>
-      </div>
-      <GameZones onWin={onWin} />
-      <BackButton onBack={onBack} />
-    </div>
-  );
-}
-
-function GameZones({ onWin }) {
-  const initialDests = [
-    { id: 1, country: 'Brasil', flag: '🇧🇷', zone: 'Calida', status: 'pending' },
-    { id: 2, country: 'Canadá', flag: '🇨🇦', zone: 'Fria', status: 'pending' },
-    { id: 3, country: 'Chile', flag: '🇨🇱', zone: 'Templada', status: 'pending' }
-  ];
-  const [destinations, setDestinations] = useState(initialDests);
-  
-  const putInZone = (id, zone) => {
-    const dest = destinations.find(d => d.id === id);
-    if(dest.zone === zone) {
-      const newDests = destinations.map(d => d.id === id ? { ...d, status: 'correct' } : d);
-      setDestinations(newDests);
-      if(newDests.every(d => d.status === 'correct')) if(onWin) onWin();
-    }
-  };
-
-  const isWin = destinations.every(d => d.status === 'correct');
-
-  return (
-    <div className="bg-slate-100 rounded-3xl p-6 shadow-2xl border-t-8 border-indigo-500 mt-8">
-      <h3 className="text-3xl font-black mb-6 text-center text-indigo-900">✈️ Agencia de Viajes</h3>
-      {!isWin ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {destinations.filter(d => d.status === 'pending').map(dest => (
-            <div key={dest.id} className="bg-white rounded-2xl p-4 shadow-md text-center border-2 border-indigo-200">
-              <span className="text-6xl">{dest.flag}</span>
-              <h4 className="text-xl font-bold mt-2 mb-4">{dest.country}</h4>
-              <button onClick={() => putInZone(dest.id, 'Calida')} className="w-full bg-red-100 text-red-700 font-bold py-2 mb-2 rounded">Traje de baño</button>
-              <button onClick={() => putInZone(dest.id, 'Templada')} className="w-full bg-green-100 text-green-700 font-bold py-2 mb-2 rounded">Chaqueta</button>
-              <button onClick={() => putInZone(dest.id, 'Fria')} className="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded">Abrigo Polar</button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center p-8 bg-indigo-500 text-white rounded-3xl"><h4 className="text-4xl font-black">¡Maletas Listas! 🧳🌍</h4></div>
-      )}
-    </div>
-  );
-}
-
-/* --- DIPLOMA DE GRADUACIÓN --- */
-function Diploma({ onBack }) {
-  const [name, setName] = useState('');
-  const [showDiploma, setShowDiploma] = useState(false);
-
-  return (
-    <div className="bg-white rounded-3xl p-6 md:p-12 shadow-2xl border-t-8 border-purple-600 text-center animate-in zoom-in">
-      {!showDiploma ? (
-        <div>
-          <h2 className="text-4xl font-black text-purple-700 mb-6">¡Felicidades Explorador! 🎉</h2>
-          <p className="text-xl text-gray-700 mb-8">Has completado todas las misiones. Escribe tu nombre para recibir tu diploma oficial:</p>
-          <input 
-            type="text" 
-            value={name} 
-            onChange={(e) => setName(e.target.value)} 
-            placeholder="Tu Nombre Aquí" 
-            className="w-full max-w-sm px-6 py-4 text-2xl font-bold text-center border-4 border-purple-200 rounded-2xl mb-8 focus:outline-none focus:border-purple-500"
-          />
-          <br/>
-          <button 
-            onClick={() => { if(name.trim().length > 0) setShowDiploma(true); }}
-            className="px-10 py-4 bg-purple-600 text-white rounded-full font-black text-xl hover:bg-purple-500 transition-transform hover:scale-105"
-          >
-            Obtener mi Diploma
-          </button>
-        </div>
-      ) : (
-        <div className="relative bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#fffdf0] border-[16px] border-double border-amber-600 p-8 md:p-16 rounded-lg shadow-2xl overflow-hidden">
-          {/* Efecto Confeti simple con CSS (Emojis cayendo) */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-50 text-3xl">
-             <span className="absolute top-0 left-[10%] animate-[bounce_4s_infinite]">🎉</span>
-             <span className="absolute top-0 left-[50%] animate-[bounce_3s_infinite_0.5s]">🌍</span>
-             <span className="absolute top-0 left-[80%] animate-[bounce_5s_infinite_1s]">✨</span>
-          </div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exploradores del Mundo</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React y ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (para compilar JSX en el navegador) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Pequeño ajuste para evitar saltos raros al renderizar emojis */
+        .emoji-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // 1. EXTRAER HOOKS DE REACT
+        const { useState, useEffect } = React;
+
+        // 2. REEMPLAZO DE ICONOS DE LUCIDE-REACT POR EMOJIS
+        const createEmojiIcon = (emoji) => ({ size = 24, className = '' }) => (
+            <span className={`emoji-icon ${className}`} style={{ fontSize: `${size}px` }} aria-hidden="true">
+                {emoji}
+            </span>
+        );
+
+        const Compass = createEmojiIcon('🧭');
+        const Grid3X3 = createEmojiIcon('🔲');
+        const Globe2 = createEmojiIcon('🌍');
+        const ThermometerSun = createEmojiIcon('🌡️');
+        const ArrowLeft = createEmojiIcon('⬅️');
+        const Info = createEmojiIcon('ℹ️');
+        const CheckCircle2 = createEmojiIcon('✅');
+        const XCircle = createEmojiIcon('❌');
+        const PlaySquare = createEmojiIcon('▶️');
+        const ExternalLink = createEmojiIcon('🔗');
+        const Smartphone = createEmojiIcon('📱');
+        const MapIcon = createEmojiIcon('🗺️'); // Renombrado a MapIcon para no chocar con Map de JS
+        const Ship = createEmojiIcon('🚢');
+        const EyeOff = createEmojiIcon('🙈');
+        const Sun = createEmojiIcon('☀️');
+        const MapPin = createEmojiIcon('📍');
+        const Clock = createEmojiIcon('🕒');
+        const Volume2 = createEmojiIcon('🔊');
+        const Medal = createEmojiIcon('🎖️');
+        const Award = createEmojiIcon('🏆');
+        const GraduationCap = createEmojiIcon('🎓');
+
+        // --- DATOS DEL GLOSARIO ---
+        const GLOSSARY = {
+          "Puntos Cardinales": "Son las 4 direcciones principales (Norte, Sur, Este y Oeste) que usamos en un mapa para no perdernos.",
+          "Brújula": "Es un instrumento con una aguja magnética que siempre apunta hacia el Norte. ¡Como magia magnética!",
+          "Cuadrícula": "Un conjunto de cuadrados formados por filas y columnas, ¡como un tablero de ajedrez o un cuaderno de matemáticas!",
+          "Coordenada": "Es la combinación de una letra y un número (ejemplo: A-3) que nos dice el lugar exacto de algo en una cuadrícula.",
+          "Filas": "Son las líneas de cuadrados que van de lado a lado (de Este a Oeste).",
+          "Columnas": "Son las líneas de cuadrados que van de arriba a abajo (de Norte a Sur).",
+          "Paralelos": "Líneas imaginarias que atraviesan la Tierra de lado a lado. Nos ayudan a medir la Latitud.",
+          "Ecuador": "El paralelo principal (Línea 0) que divide la Tierra en Hemisferio Norte y Hemisferio Sur.",
+          "Meridianos": "Líneas imaginarias que atraviesan la Tierra de arriba a abajo, de polo a polo. Nos ayudan a medir la Longitud y el tiempo.",
+          "Greenwich": "El meridiano principal (Línea 0) que divide la Tierra en Hemisferio Este y Hemisferio Oeste.",
+          "Hemisferio": "Significa 'mitad de una esfera'.",
+          "Tiempo": "Es cómo está el día hoy: si llueve, hace sol o hay viento.",
+          "Clima": "Es cómo se comporta el tiempo en un lugar durante muuuchos años.",
+          "Perpendicular": "Cuando los rayos del sol caen directos, ¡haciendo mucho calor!",
+          "Oblicuo": "Cuando los rayos del sol caen un poco inclinados, dando una temperatura suave."
+        };
+
+        function App() {
+          const [currentModule, setCurrentModule] = useState(null);
+          const [glossaryTerm, setGlossaryTerm] = useState(null);
           
-          <Globe2 size={64} className="text-amber-800 mx-auto mb-6" />
-          <h1 className="text-5xl md:text-6xl font-black text-amber-900 mb-2 font-serif">DIPLOMA</h1>
-          <h2 className="text-2xl text-amber-700 font-bold mb-10 tracking-widest uppercase">De Explorador Cartográfico</h2>
-          <p className="text-xl text-stone-800 italic mb-4">Se certifica con honores que:</p>
-          <p className="text-5xl font-bold text-blue-900 border-b-4 border-amber-800 inline-block px-12 pb-2 mb-10 font-serif">{name}</p>
-          <p className="text-xl text-stone-800 font-medium leading-relaxed max-w-2xl mx-auto">
-            Ha demostrado una gran valentía e inteligencia completando con éxito todos los desafíos sobre Puntos Cardinales, Cuadrículas, Paralelos, Meridianos y Zonas Climáticas.
-          </p>
-          <div className="mt-16 flex justify-around items-center border-t-2 border-amber-800/20 pt-8">
-            <div className="text-center">
-              <Compass size={48} className="text-amber-800 mx-auto mb-2 opacity-50" />
-              <p className="font-bold text-amber-900">Sello de Excelencia</p>
-            </div>
-          </div>
-        </div>
-      )}
-      <BackButton onBack={onBack} />
-    </div>
-  );
-}
+          // SISTEMA DE PROGRESO Y MEDALLAS
+          const [completedModules, setCompletedModules] = useState({
+            mod1: false, mod2: false, mod3: false, mod4: false
+          });
 
-function BackButton({ onBack }) {
-  return (
-    <button onClick={onBack} className="mt-8 w-full py-4 bg-gray-800 text-white font-black rounded-2xl text-xl hover:bg-gray-700 hover:shadow-lg transition-all flex items-center justify-center gap-3">
-      <ArrowLeft size={28} /> Volver al Menú Principal
-    </button>
-  );
-}
+          const markCompleted = (modId) => {
+            setCompletedModules(prev => ({...prev, [modId]: true}));
+          };
+
+          const isAllCompleted = Object.values(completedModules).every(Boolean);
+
+          const Term = ({ word }) => (
+            <span 
+              onClick={() => setGlossaryTerm(word)}
+              className="inline-flex items-center gap-1 text-blue-700 font-bold border-b-2 border-dotted border-blue-500 cursor-pointer hover:bg-blue-100 rounded px-1 transition-colors"
+              title="Toca para saber qué significa"
+            >
+              {word} <Info size={14} className="text-blue-500" />
+            </span>
+          );
+
+          const goBack = () => {
+            setCurrentModule(null);
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Detener el audio al salir
+            }
+          };
+
+          return (
+            <div className="min-h-screen bg-sky-50 font-sans text-gray-800 selection:bg-yellow-200 pb-12">
+              <header className="bg-white shadow-sm sticky top-0 z-50 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {currentModule && (
+                    <button onClick={goBack} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
+                      <ArrowLeft size={24} className="text-gray-700" />
+                    </button>
+                  )}
+                  <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500 flex items-center gap-2">
+                    ¡Exploradores del Mundo! 🌍
+                  </h1>
+                </div>
+              </header>
+
+              <main className="max-w-4xl mx-auto p-4 md:p-6">
+                {!currentModule ? (
+                  <MainMenu 
+                    onSelect={setCurrentModule} 
+                    completedModules={completedModules} 
+                    isAllCompleted={isAllCompleted} 
+                  />
+                ) : (
+                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {currentModule === 'mod1' && <Module1 Term={Term} onBack={goBack} onWin={() => markCompleted('mod1')} />}
+                    {currentModule === 'mod2' && <Module2 Term={Term} onBack={goBack} onWin={() => markCompleted('mod2')} />}
+                    {currentModule === 'mod3' && <Module3 Term={Term} onBack={goBack} onWin={() => markCompleted('mod3')} />}
+                    {currentModule === 'mod4' && <Module4 Term={Term} onBack={goBack} onWin={() => markCompleted('mod4')} />}
+                    {currentModule === 'diploma' && <Diploma onBack={goBack} />}
+                  </div>
+                )}
+              </main>
+
+              {/* MODAL DEL GLOSARIO */}
+              {glossaryTerm && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl transform scale-100 animate-in zoom-in-95 duration-200">
+                    <h3 className="text-2xl font-bold text-blue-600 mb-3 flex items-center gap-2">
+                      <BookOpen size={24} /> Diccionario
+                    </h3>
+                    <p className="text-xl font-bold mb-2 text-gray-800">{glossaryTerm}</p>
+                    <p className="text-gray-600 text-lg leading-relaxed">{GLOSSARY[glossaryTerm]}</p>
+                    <button onClick={() => setGlossaryTerm(null)} className="mt-6 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-colors text-lg">
+                      ¡Entendido! 👍
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // --- BOTÓN DE LECTURA EN VOZ ALTA ---
+        function SpeakButton({ text }) {
+          const speak = () => {
+            if ('speechSynthesis' in window) {
+              window.speechSynthesis.cancel(); // Detener audios anteriores
+              const utterance = new SpeechSynthesisUtterance(text);
+              utterance.lang = 'es-ES'; // Español
+              utterance.rate = 0.9; // Un poco más lento para niños
+              window.speechSynthesis.speak(utterance);
+            } else {
+              alert("Tu navegador no soporta lectura en voz alta.");
+            }
+          };
+          return (
+            <button onClick={speak} className="inline-flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-800 p-2 rounded-full transition-all shadow-sm active:scale-95" title="Leer en voz alta">
+              <Volume2 size={20} />
+            </button>
+          );
+        }
+
+        // --- MENÚ PRINCIPAL CON MEDALLAS ---
+        function MainMenu({ onSelect, completedModules, isAllCompleted }) {
+          const modules = [
+            { id: 'mod1', title: 'Puntos Cardinales', icon: Compass, color: 'bg-orange-500', shadow: 'shadow-orange-200', text: 'Aprende a usar la brújula', medalEmoji: '🧭' },
+            { id: 'mod2', title: 'Cuadrículas', icon: Grid3X3, color: 'bg-blue-500', shadow: 'shadow-blue-200', text: 'Encuentra tesoros en el mapa', medalEmoji: '⚓' },
+            { id: 'mod3', title: 'Líneas Invisibles', icon: Globe2, color: 'bg-green-500', shadow: 'shadow-green-200', text: 'Descubre paralelos y meridianos', medalEmoji: '🌍' },
+            { id: 'mod4', title: 'Zonas Climáticas', icon: ThermometerSun, color: 'bg-yellow-500', shadow: 'shadow-yellow-200', text: 'Viaja del calor al frío', medalEmoji: '🌡️' },
+          ];
+
+          return (
+            <div className="space-y-8">
+              {/* PANEL DE MEDALLAS */}
+              <div className="bg-white rounded-3xl p-6 shadow-md border-4 border-amber-200 flex flex-col items-center">
+                <h3 className="text-xl font-bold text-amber-600 mb-4 flex items-center gap-2"><Award /> Tus Medallas de Explorador</h3>
+                <div className="flex gap-4 sm:gap-8">
+                  {modules.map(m => (
+                    <div key={m.id} className="flex flex-col items-center gap-2">
+                      <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 flex items-center justify-center text-3xl sm:text-4xl transition-all duration-500 shadow-inner
+                        ${completedModules[m.id] ? 'bg-gradient-to-br from-yellow-300 to-amber-500 border-yellow-200 shadow-yellow-500/50 scale-110 animate-in zoom-in' : 'bg-gray-100 border-gray-200 grayscale opacity-50'}`}
+                      >
+                        {m.medalEmoji}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {isAllCompleted && (
+                <div className="animate-bounce">
+                  <button 
+                    onClick={() => onSelect('diploma')}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-4 border-4 border-white"
+                  >
+                    <GraduationCap size={48} />
+                    <div className="text-left">
+                      <h2 className="text-3xl font-black">¡GRADUACIÓN! 🎓</h2>
+                      <p className="text-purple-100 font-bold text-lg">Tienes las 4 medallas. Toca aquí para tu diploma.</p>
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              <div className="text-center space-y-4 my-8">
+                <h2 className="text-4xl md:text-5xl font-black text-gray-800">¿Qué quieres explorar hoy?</h2>
+                <p className="text-xl text-gray-600">Toca una aventura y gana su medalla al terminar.</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {modules.map((mod) => {
+                  const Icon = mod.icon;
+                  const isDone = completedModules[mod.id];
+                  return (
+                    <button
+                      key={mod.id}
+                      onClick={() => onSelect(mod.id)}
+                      className={`group flex items-center p-6 bg-white rounded-3xl shadow-xl ${mod.shadow} hover:scale-105 hover:shadow-2xl transition-all duration-300 border-4 ${isDone ? 'border-amber-400' : 'border-transparent'} text-left w-full relative overflow-hidden`}
+                    >
+                      {isDone && <div className="absolute top-2 right-2 text-2xl animate-pulse">🌟</div>}
+                      <div className={`${mod.color} p-4 rounded-2xl text-white mr-6 group-hover:rotate-12 transition-transform`}>
+                        <Icon size={48} />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-1">{mod.title}</h3>
+                        <p className="text-gray-500 text-lg">{mod.text}</p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        const BookOpen = ({size}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+
+        /* --- MÓDULO 1: PUNTOS CARDINALES --- */
+        function Module1({ Term, onBack, onWin }) {
+          const introText = "Los Puntos Cardinales son las direcciones mágicas que nos ayudan a saber dónde estamos en cualquier parte del mundo. Son como una brújula invisible para los exploradores. La Tierra es un imán gigante. La Brújula tiene una pequeña aguja que es atraída por la Tierra y siempre apunta hacia el Norte.";
+
+          return (
+            <div className="space-y-8">
+              <div className="bg-orange-100 rounded-3xl p-6 border-4 border-orange-200 relative">
+                <div className="absolute top-4 right-4"><SpeakButton text={introText} /></div>
+                <h2 className="text-3xl font-black text-orange-600 mb-4 flex items-center gap-3">
+                  <Compass size={36} /> Los Puntos Cardinales
+                </h2>
+                <p className="text-xl leading-relaxed text-gray-700 pr-12">
+                  Los <Term word="Puntos Cardinales" /> son las direcciones mágicas que nos ayudan a saber dónde estamos en cualquier parte del mundo. 
+                  ¡Son como una brújula invisible para los exploradores! 🧭
+                </p>
+                <div className="my-6 p-4 bg-white rounded-2xl shadow-sm text-lg space-y-3">
+                  <p>La Tierra es un imán gigante. La <Term word="Brújula" /> tiene una pequeña aguja que es atraída por la Tierra y <strong>siempre apunta hacia el Norte</strong>.</p>
+                  <ul className="list-disc pl-6 space-y-2 font-bold text-orange-700">
+                    <li>N = Norte (Arriba)</li>
+                    <li>S = Sur (Abajo)</li>
+                    <li>E = Este (A la derecha)</li>
+                    <li>O = Oeste (A la izquierda)</li>
+                  </ul>
+                </div>
+              </div>
+
+              <NatureClues />
+              <AnimatedCompass />
+              <TreasureMapGame onWin={onWin} />
+
+              <VideoSection links={[{ title: "La Brújula y los Puntos", url: "https://www.youtube.com/watch?v=xZ-qHn8mOlc" }, { title: "Puntos Cardinales", url: "https://www.youtube.com/watch?v=vfng3DwpCkA" }]} />
+              <BackButton onBack={onBack} />
+            </div>
+          );
+        }
+
+        function NatureClues() {
+          const [timeOfDay, setTimeOfDay] = useState('morning'); 
+          return (
+            <div className="bg-sky-100 rounded-3xl p-6 shadow-xl border-t-8 border-sky-400">
+              <div className="flex justify-between items-start">
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2 text-sky-800">
+                  <Sun className="text-yellow-500" size={32} /> Pistas de la Naturaleza
+                </h3>
+                <SpeakButton text="Si no tienes una brújula, puedes mirar al cielo. Al amanecer, el Sol siempre nace por el Este. Al atardecer, el Sol se oculta por el Oeste." />
+              </div>
+              <p className="text-lg text-sky-900 mb-6 font-medium">Si no tienes una brújula, ¡no te preocupes! El Sol y el paisaje nos dan pistas mágicas para ubicarnos:</p>
+
+              <div className="flex justify-center gap-4 mb-6">
+                <button onClick={() => setTimeOfDay('morning')} className={`py-3 px-6 rounded-2xl font-black transition-all border-b-4 ${timeOfDay === 'morning' ? 'bg-yellow-400 text-yellow-900 border-yellow-500 scale-105 shadow-md' : 'bg-white text-gray-400 border-gray-200'}`}>☀️ Mañana</button>
+                <button onClick={() => setTimeOfDay('evening')} className={`py-3 px-6 rounded-2xl font-black transition-all border-b-4 ${timeOfDay === 'evening' ? 'bg-orange-500 text-white border-orange-600 scale-105 shadow-md' : 'bg-white text-gray-400 border-gray-200'}`}>🌇 Tarde</button>
+              </div>
+
+              <div className={`relative h-56 rounded-2xl overflow-hidden border-4 border-white shadow-inner flex items-end justify-between px-4 pb-4 transition-colors duration-1000 ${timeOfDay === 'morning' ? 'bg-gradient-to-b from-blue-300 to-green-200' : 'bg-gradient-to-b from-indigo-500 to-orange-300'}`}>
+                <div className="text-center z-10 w-24">
+                  <span className="text-5xl block animate-pulse">🌊</span>
+                  <span className="font-black text-white drop-shadow-md text-xl">OESTE</span>
+                  <span className="text-sm font-bold block text-blue-100 drop-shadow-sm">El Mar</span>
+                </div>
+                <div className="text-center z-10 transform -translate-y-2">
+                  <span className="text-6xl block hover:scale-110 transition-transform">🧍</span>
+                  <span className="font-black text-white drop-shadow-md bg-black/20 px-3 py-1 rounded-full text-sm">TÚ</span>
+                </div>
+                <div className="text-center z-10 w-24">
+                  <span className="text-5xl block drop-shadow-lg">⛰️</span>
+                  <span className="font-black text-white drop-shadow-md text-xl">ESTE</span>
+                  <span className="text-sm font-bold block text-yellow-100 drop-shadow-sm">Montañas</span>
+                </div>
+                <div className={`absolute text-7xl transition-all duration-1000 ease-in-out drop-shadow-2xl z-0 ${timeOfDay === 'morning' ? 'right-8 top-8 opacity-100 scale-100' : 'left-8 top-16 opacity-90 scale-90'}`}>
+                  {timeOfDay === 'morning' ? '☀️' : '🌇'}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        function AnimatedCompass() {
+          const [heading, setHeading] = useState(0);
+          const [permission, setPermission] = useState('prompt');
+
+          const requestCompassPermission = async () => {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+              try {
+                const response = await DeviceOrientationEvent.requestPermission();
+                setPermission(response);
+                if (response === 'granted') window.addEventListener('deviceorientation', handleOrientation);
+              } catch (error) { setPermission('denied'); }
+            } else {
+              setPermission('granted');
+              window.addEventListener('deviceorientationabsolute', handleOrientation);
+              window.addEventListener('deviceorientation', handleOrientation);
+            }
+          };
+
+          const handleOrientation = (event) => {
+            let alpha = event.alpha; let webkitCompassHeading = event.webkitCompassHeading; 
+            if (webkitCompassHeading) setHeading(webkitCompassHeading);
+            else if (alpha !== null) setHeading(360 - alpha);
+          };
+
+          useEffect(() => {
+            return () => {
+              window.removeEventListener('deviceorientation', handleOrientation);
+              window.removeEventListener('deviceorientationabsolute', handleOrientation);
+            };
+          }, []);
+
+          return (
+            <div className="bg-white rounded-3xl p-6 shadow-xl border-t-8 border-orange-400 flex flex-col items-center mt-8">
+              <h3 className="text-2xl font-bold mb-2 flex items-center gap-2"><Smartphone className="text-orange-500" /> Tu propia Brújula</h3>
+              {permission !== 'granted' && <button onClick={requestCompassPermission} className="mb-6 py-2 px-6 bg-orange-500 text-white font-bold rounded-xl shadow-md">Activar Brújula</button>}
+              <div className="relative w-48 h-48 rounded-full border-8 border-orange-500 shadow-inner bg-orange-50 flex justify-center items-center">
+                <div className="absolute top-2 font-black text-xl text-red-500">N</div>
+                <div className="absolute bottom-2 font-black text-xl text-gray-500">S</div>
+                <div className="absolute right-3 font-black text-xl text-gray-500">E</div>
+                <div className="absolute left-3 font-black text-xl text-gray-500">O</div>
+                <div className="relative w-full h-full transition-transform duration-300 ease-out flex justify-center" style={{ transform: `rotate(${-heading}deg)` }}>
+                  <div className="absolute top-[10%] w-0 h-0 border-l-[10px] border-r-[10px] border-b-[60px] border-l-transparent border-r-transparent border-b-red-600"></div>
+                  <div className="absolute bottom-[10%] w-0 h-0 border-l-[10px] border-r-[10px] border-t-[60px] border-l-transparent border-r-transparent border-t-gray-700"></div>
+                  <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-orange-500 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        function TreasureMapGame({ onWin }) {
+          const mapGrid = [
+            ['W','W','W','W','W','W','W','W'],
+            ['W','T','S','S','M','G','G','W'],
+            ['W','M','M','S','M','G','M','W'],
+            ['W','G','S','S','F','G','G','W'],
+            ['W','G','M','M','M','M','M','W'],
+            ['W','G','G','G','S','S','G','W'],
+            ['W','M','M','M','S','M','M','W'],
+            ['W','P','S','S','S','G','G','W']
+          ];
+          const startPos = { x: 1, y: 7 }; const treasurePos = { x: 1, y: 1 };
+          const [pos, setPos] = useState(startPos); const [path, setPath] = useState([startPos]);
+          const [won, setWon] = useState(false); const [message, setMessage] = useState("¡Encuentra el tesoro ❌ guiando al explorador!");
+
+          const getCellDetails = (char) => {
+            switch(char) {
+              case 'W': return { bg: 'bg-blue-400', icon: '🌊', name: 'el mar profundo' };
+              case 'M': return { bg: 'bg-stone-500', icon: '⛰️', name: 'las montañas altas' };
+              case 'F': return { bg: 'bg-green-800', icon: '🌲', name: 'el bosque espeso' };
+              case 'S': return { bg: 'bg-yellow-200', icon: '' };
+              case 'G': return { bg: 'bg-green-400', icon: '🌿' };
+              case 'T': return { bg: 'bg-yellow-300', icon: '❌' };
+              case 'P': return { bg: 'bg-yellow-200', icon: '' };
+              default: return { bg: 'bg-white', icon: '' };
+            }
+          };
+
+          const move = (direction) => {
+            if (won) return;
+            let { x, y } = pos;
+            if (direction === 'Norte') y -= 1; if (direction === 'Sur') y += 1;
+            if (direction === 'Este') x += 1; if (direction === 'Oeste') x -= 1;
+            if (y < 0 || y >= mapGrid.length || x < 0 || x >= mapGrid[0].length) { setMessage("¡Cuidado! Te sales del mapa 🗺️."); return; }
+            const nextCell = mapGrid[y][x]; const cellData = getCellDetails(nextCell);
+            if (['W', 'M', 'F'].includes(nextCell)) { setMessage(`¡No puedes pasar por ${cellData.name}!`); return; }
+
+            const newPos = { x, y };
+            setMessage("¡Buen rumbo! Sigue explorando 🧭."); setPos(newPos);
+            setPath([...path, newPos]);
+
+            if (newPos.x === treasurePos.x && newPos.y === treasurePos.y) {
+              setWon(true); setMessage("¡TESORO ENCONTRADO! 👑💰 Eres un experto navegante.");
+              if(onWin) onWin();
+            }
+          };
+
+          return (
+            <div className="bg-[#f5e4c3] rounded-3xl p-4 md:p-8 shadow-2xl border-4 border-amber-800 relative mt-8">
+              <h3 className="text-3xl font-black mb-2 text-center text-amber-900 flex justify-center items-center gap-3"><MapIcon className="text-red-700" size={36} /> La Isla del Tesoro</h3>
+              <p className="text-center text-amber-900 font-bold text-lg mb-6 h-14">{message}</p>
+              <div className="flex justify-center mb-8 relative">
+                <div className="grid gap-0 border-8 border-amber-900 rounded-xl overflow-hidden shadow-2xl bg-blue-400" style={{ gridTemplateColumns: `repeat(${mapGrid[0].length}, minmax(0, 1fr))` }}>
+                  {mapGrid.map((row, y) => row.map((char, x) => {
+                      const cellData = getCellDetails(char); const isPlayer = pos.x === x && pos.y === y;
+                      const isTreasure = treasurePos.x === x && treasurePos.y === y; const isPath = path.some(p => p.x === x && p.y === y);
+                      return (
+                        <div key={`${x}-${y}`} className={`w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center relative ${cellData.bg} border-t border-l border-white/20`}>
+                          {cellData.icon && !isTreasure && <span className="absolute opacity-90 text-xl md:text-3xl">{cellData.icon}</span>}
+                          {isPath && !isPlayer && !isTreasure && <div className="absolute w-2 h-2 bg-amber-900/40 rounded-full"></div>}
+                          {isTreasure && !isPlayer && <span className="absolute z-10 text-red-600 font-black text-2xl md:text-3xl animate-pulse">❌</span>}
+                          {isPlayer && <span className="absolute z-20 text-3xl md:text-4xl animate-bounce">🚶‍♂️</span>}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+              {!won ? (
+                <div className="max-w-[280px] mx-auto bg-amber-900/10 p-4 rounded-full border-4 border-amber-900/20">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-start-2"><button onClick={() => move('Norte')} className="w-full py-4 bg-red-600 text-white font-black rounded-t-2xl">Norte</button></div>
+                    <div className="col-start-1 row-start-2"><button onClick={() => move('Oeste')} className="w-full py-4 bg-stone-600 text-white font-black rounded-l-2xl">Oeste</button></div>
+                    <div className="col-start-2 row-start-2 flex items-center justify-center bg-amber-100 rounded-full border-4 border-amber-900"><Compass className="text-red-700" size={36} /></div>
+                    <div className="col-start-3 row-start-2"><button onClick={() => move('Este')} className="w-full py-4 bg-stone-600 text-white font-black rounded-r-2xl">Este</button></div>
+                    <div className="col-start-2 row-start-3"><button onClick={() => move('Sur')} className="w-full py-4 bg-stone-600 text-white font-black rounded-b-2xl">Sur</button></div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center p-8 bg-gradient-to-b from-yellow-300 to-yellow-500 rounded-3xl border-8 border-yellow-600 shadow-2xl animate-in zoom-in">
+                  <h4 className="text-4xl font-black text-yellow-900 mb-4">¡Misión Cumplida! 🏆</h4>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        /* --- MÓDULO 2: CUADRÍCULAS --- */
+        function Module2({ Term, onBack, onWin }) {
+          const introText = "Una Cuadrícula es como un gran tablero de ajedrez gigante. Nos sirve para ubicar elementos usando coordenadas. Para no perdernos, usamos letras en las columnas que van de arriba a abajo, y números en las filas que van de lado a lado. Por ejemplo, B-3 significa Columna B, Fila 3.";
+          return (
+            <div className="space-y-8">
+              <div className="bg-blue-100 rounded-3xl p-6 border-4 border-blue-200 relative">
+                <div className="absolute top-4 right-4"><SpeakButton text={introText} /></div>
+                <h2 className="text-3xl font-black text-blue-600 mb-4 flex items-center gap-3">
+                  <Grid3X3 size={36} /> Jugando con Cuadrículas
+                </h2>
+                <p className="text-xl leading-relaxed text-gray-700 pr-12">
+                  Una <Term word="Cuadrícula" /> es como un tablero de ajedrez. Nos sirve para ubicar elementos usando <Term word="Coordenada" />s.
+                </p>
+                <div className="my-6 p-4 bg-white rounded-2xl shadow-sm text-lg space-y-3">
+                  <p>Para no perdernos, usamos letras y números:</p>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li>Las <strong>letras</strong> suelen estar en las <Term word="Columnas" /> (arriba abajo).</li>
+                    <li>Los <strong>números</strong> suelen estar en las <Term word="Filas" /> (lado a lado).</li>
+                  </ul>
+                </div>
+              </div>
+
+              <GameNavalBattle onWin={onWin} />
+              <BackButton onBack={onBack} />
+            </div>
+          );
+        }
+
+        function GameNavalBattle({ onWin }) {
+          const [gameState, setGameState] = useState('start'); 
+          const [gameMode, setGameMode] = useState(''); // '1P' or '2P'
+          const [ships, setShips] = useState([]);
+          const [shots, setShots] = useState([]);
+          const [feedback, setFeedback] = useState('¡Prepara tus cañones!');
+
+          const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+          const rows = [1, 2, 3, 4, 5, 6, 7, 8];
+          
+          const shipTypes = [
+            { id: 1, name: 'Galeón Pirata', emoji: '🏴‍☠️' },
+            { id: 2, name: 'Acorazado', emoji: '🚢' },
+            { id: 3, name: 'Fragata', emoji: '⛵' },
+            { id: 4, name: 'Submarino', emoji: '🚤' },
+            { id: 5, name: 'Balsa', emoji: '🛶' }
+          ];
+          const MAX_SHIPS = shipTypes.length;
+          const MAX_SHOTS = 15;
+
+          // IA: Coloca barcos al azar para 1 Jugador
+          const startOnePlayerMode = () => {
+            const randomShips = [];
+            const tempCoords = [];
+            while (randomShips.length < MAX_SHIPS) {
+              const rCol = cols[Math.floor(Math.random() * cols.length)];
+              const rRow = rows[Math.floor(Math.random() * rows.length)];
+              const coord = `${rCol}-${rRow}`;
+              if (!tempCoords.includes(coord)) {
+                tempCoords.push(coord);
+                randomShips.push({ coord, type: shipTypes[randomShips.length] });
+              }
+            }
+            setShips(randomShips);
+            setGameMode('1P');
+            setGameState('playing');
+            setFeedback('¡Barbanegra ocultó sus barcos! ¡Dispara!');
+          };
+
+          const handleCellClick = (coord) => {
+            if (gameState === 'hiding') {
+              const existingShip = ships.find(s => s.coord === coord);
+              if (existingShip) {
+                setShips(ships.filter(s => s.coord !== coord));
+              } else if (ships.length < MAX_SHIPS) {
+                setShips([...ships, { coord, type: shipTypes[ships.length] }]);
+              }
+            } else if (gameState === 'playing') {
+              if (shots.find(s => s.coord === coord)) return; 
+              if (shots.length >= MAX_SHOTS) return; 
+              
+              const hitShip = ships.find(s => s.coord === coord);
+              const newShots = [...shots, { coord, hit: !!hitShip, ship: hitShip }];
+              setShots(newShots);
+
+              if (hitShip) {
+                setFeedback(`¡KABOOM! 💥 Hundiste un barco en ${coord}`);
+              } else {
+                setFeedback(`¡Agua! 🌊 Disparo fallido en ${coord}.`);
+              }
+
+              const hits = newShots.filter(s => s.hit).length;
+              if (hits === MAX_SHIPS) {
+                setFeedback("¡TODOS LOS BARCOS HUNDIDOS!");
+                setTimeout(() => { setGameState('over'); if(onWin) onWin(); }, 1500);
+              } else if (newShots.length >= MAX_SHOTS) {
+                setFeedback("¡SE ACABARON LOS MISILES!");
+                setTimeout(() => setGameState('lose'), 1500);
+              }
+            }
+          };
+
+          const resetGame = () => {
+            setGameState('start'); setGameMode(''); setShips([]); setShots([]); setFeedback('¡Prepara tus cañones!');
+          };
+
+          const renderGrid = () => (
+            <div className="relative mx-auto bg-amber-900 p-2 sm:p-4 rounded-xl shadow-2xl border-4 sm:border-8 border-amber-950 max-w-fit">
+              <div className="grid grid-cols-9 gap-1 sm:gap-1.5 relative z-10">
+                <div className="w-7 h-7 sm:w-10 sm:h-10"></div>
+                {cols.map(c => (
+                  <div key={`col-${c}`} className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center font-black text-amber-200 bg-amber-950/50 rounded">{c}</div>
+                ))}
+                {rows.map(r => (
+                  <React.Fragment key={`row-${r}`}>
+                    <div className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center font-black text-amber-200 bg-amber-950/50 rounded">{r}</div>
+                    {cols.map(c => {
+                      const coord = `${c}-${r}`;
+                      const shipObj = ships.find(s => s.coord === coord);
+                      const shotInfo = shots.find(s => s.coord === coord);
+                      let content = ''; let bgClass = 'bg-cyan-500 hover:bg-cyan-400 cursor-pointer';
+
+                      if (gameState === 'hiding') {
+                        if (shipObj) { content = shipObj.type.emoji; bgClass = 'bg-blue-400'; }
+                      } else if (gameState === 'playing' || gameState === 'over' || gameState === 'lose') {
+                        if (shotInfo) {
+                          if (shotInfo.hit) { content = '💥'; bgClass = 'bg-red-600'; }
+                          else { content = '🌊'; bgClass = 'bg-blue-900/80'; }
+                        } else if (gameState === 'lose' && shipObj) {
+                          content = <span className="opacity-50">{shipObj.type.emoji}</span>; bgClass = 'bg-slate-600';
+                        }
+                      }
+                      return (
+                        <div key={coord} onClick={() => handleCellClick(coord)} className={`w-7 h-7 sm:w-10 sm:h-10 rounded flex items-center justify-center text-xl transition-all border border-white/20 ${bgClass}`}>{content}</div>
+                      )
+                    })}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          );
+
+          return (
+            <div className="bg-white rounded-3xl p-4 sm:p-8 shadow-2xl border-t-8 border-blue-800 relative">
+              <h3 className="text-3xl font-black mb-6 text-center text-blue-900 flex justify-center items-center gap-3"><Ship className="text-blue-700" size={36} /> Gran Batalla Naval</h3>
+
+              {gameState === 'start' && (
+                <div className="text-center py-8">
+                  <h4 className="font-bold text-xl text-blue-800 mb-6">Elige cómo quieres jugar:</h4>
+                  <div className="flex flex-col gap-4 max-w-sm mx-auto">
+                     <button onClick={startOnePlayerMode} className="p-4 bg-purple-600 text-white rounded-xl font-bold text-lg hover:bg-purple-500 shadow-md flex items-center justify-center gap-2">
+                       🤖 1 Jugador (vs Computadora)
+                     </button>
+                     <button onClick={() => {setGameMode('2P'); setGameState('hiding');}} className="p-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-500 shadow-md flex items-center justify-center gap-2">
+                       👥 2 Jugadores (Con un amigo)
+                     </button>
+                  </div>
+                </div>
+              )}
+
+              {gameState === 'hiding' && (
+                <div className="animate-in fade-in">
+                  <div className="bg-amber-100 p-4 mb-6 rounded-xl"><p className="text-amber-800 font-bold">JUGADOR 1: Oculta 5 barcos. ¡Que el J2 no mire!</p></div>
+                  {renderGrid()}
+                  {ships.length === MAX_SHIPS && (
+                    <div className="mt-8 text-center"><button onClick={() => setGameState('pass')} className="px-10 py-4 bg-green-500 text-white rounded-full font-black text-xl hover:bg-green-400">Pasar tablet</button></div>
+                  )}
+                </div>
+              )}
+
+              {gameState === 'pass' && (
+                <div className="text-center py-16 bg-slate-900 rounded-3xl"><EyeOff size={80} className="text-red-500 mx-auto mb-6" /><h4 className="text-4xl font-black text-white mb-4">¡JUGADOR 2!</h4><button onClick={() => setGameState('playing')} className="px-10 py-4 bg-red-600 text-white rounded-full font-black text-xl hover:bg-red-500">ESTOY LISTO</button></div>
+              )}
+
+              {gameState === 'playing' && (
+                <div className="animate-in fade-in">
+                  <div className="bg-red-50 p-4 mb-6 rounded-xl"><p className="text-red-800 font-bold">¡FUEGO! Usa las columnas y filas para hundir la flota. {gameMode === '1P' ? 'Barbanegra te espera.' : ''}</p></div>
+                  <p className="font-mono font-bold text-xl text-center text-blue-800 mb-4">{feedback}</p>
+                  {renderGrid()}
+                  <div className="mt-8 flex justify-between px-6 py-4 bg-gray-100 rounded-2xl font-bold">
+                    <span className="text-gray-500">Misiles: <span className="text-red-500">{shots.length}/{MAX_SHOTS}</span></span>
+                    <span className="text-red-600">Hundidos: {shots.filter(s => s.hit).length}/{MAX_SHIPS}</span>
+                  </div>
+                </div>
+              )}
+
+              {gameState === 'over' && (
+                <div className="text-center p-10 bg-yellow-400 rounded-3xl mt-6"><h4 className="text-4xl font-black mb-4">¡VICTORIA ÉPICA!</h4><button onClick={resetGame} className="px-8 py-3 bg-white rounded-full font-bold">Jugar la Revancha</button></div>
+              )}
+              
+              {gameState === 'lose' && (
+                <div className="text-center p-10 bg-slate-800 rounded-3xl mt-6 text-white"><h4 className="text-4xl font-black mb-4 text-red-400">¡DERROTA!</h4><button onClick={resetGame} className="px-8 py-3 bg-red-600 rounded-full font-bold">Intentarlo otra vez</button></div>
+              )}
+            </div>
+          );
+        }
+
+        /* --- MÓDULO 3: LÍNEAS INVISIBLES --- */
+        function Module3({ Term, onBack, onWin }) {
+          const introText = "Como aprendimos con las cuadrículas, la Tierra también tiene su propia red gigante de líneas invisibles para encontrar cualquier lugar. Se llaman Paralelos y Meridianos. Los paralelos son las líneas acostadas, como el Ecuador. Los meridianos son las líneas de pie, como el meridiano de Greenwich.";
+          
+          return (
+            <div className="space-y-8">
+              <div className="bg-green-100 rounded-3xl p-6 border-4 border-green-200 relative">
+                <div className="absolute top-4 right-4"><SpeakButton text={introText} /></div>
+                <h2 className="text-3xl font-black text-green-600 mb-4 flex items-center gap-3"><Globe2 size={36} /> Las Líneas de la Tierra</h2>
+                <p className="text-xl leading-relaxed text-gray-700 pr-12">
+                  La Tierra tiene su propia red gigante de líneas invisibles para encontrar cualquier lugar. ¡Se llaman <Term word="Paralelos" /> y <Term word="Meridianos" />!
+                </p>
+                <div className="my-6 grid md:grid-cols-2 gap-6">
+                  <div className="p-5 bg-white rounded-2xl shadow-md border-l-8 border-red-500">
+                    <h4 className="font-black text-2xl text-red-600 mb-3">🍔 Paralelos</h4>
+                    <p className="text-gray-700">Son las líneas "acostadas", ¡como las capas de una hamburguesa! Atraviesan la Tierra de lado a lado. El principal es el <Term word="Ecuador" />.</p>
+                  </div>
+                  <div className="p-5 bg-white rounded-2xl shadow-md border-l-8 border-yellow-500">
+                    <h4 className="font-black text-2xl text-yellow-600 mb-3">🍊 Meridianos</h4>
+                    <p className="text-gray-700">Son las líneas "de pie", van de Polo a Polo, ¡como los gajos de una naranja! El principal es <Term word="Greenwich" />.</p>
+                  </div>
+                </div>
+              </div>
+              <GameCoordinateFinder onWin={onWin} />
+              <GameTimeZones3D />
+              <BackButton onBack={onBack} />
+            </div>
+          );
+        }
+
+        function GameCoordinateFinder({ onWin }) {
+          const [level, setLevel] = useState(0);
+          const [message, setMessage] = useState('');
+          const [status, setStatus] = useState('playing'); 
+
+          const missions = [
+            { id: 1, target: 'Pingüino', emoji: '🐧', lat: 'Sur', lon: 'Oeste' },
+            { id: 2, target: 'Oso Polar', emoji: '🐻‍❄️', lat: 'Norte', lon: 'Este' },
+            { id: 3, target: 'Tesoro', emoji: '💎', lat: 'Sur', lon: 'Este' }
+          ];
+          const currentMission = missions[level];
+
+          const handleSelection = (selectedLat, selectedLon) => {
+            if (selectedLat === currentMission.lat && selectedLon === currentMission.lon) {
+              setStatus('correct'); setMessage(`¡Encontraste el ${currentMission.target}! 🎉`);
+              setTimeout(() => {
+                if (level < missions.length - 1) { setLevel(l => l + 1); setStatus('playing'); setMessage(''); } 
+                else { setMessage('¡Completado! Eres experto en coordenadas.'); if(onWin) onWin(); }
+              }, 2000);
+            } else { setMessage('Ahí no está. Revisa si es Norte/Sur y Este/Oeste. 🕵️‍♂️'); }
+          };
+
+          return (
+            <div className="bg-white rounded-3xl p-6 shadow-xl border-t-8 border-green-500 mb-8">
+              <h3 className="text-2xl font-black mb-4 text-center text-green-700"><MapPin size={28} className="inline mr-2"/> Rescate Geográfico</h3>
+              {level < missions.length && <p className="text-center font-bold text-gray-700 mb-4">Encuentra: {currentMission.target} {currentMission.emoji} ({currentMission.lat} / {currentMission.lon})</p>}
+              <div className="relative w-full max-w-[280px] mx-auto aspect-square rounded-full border-4 border-blue-400 bg-blue-100 mb-6">
+                <div className="absolute top-1/2 left-0 w-full h-1.5 bg-red-500 -translate-y-1/2 z-10 shadow-sm"></div>
+                <div className="absolute left-1/2 top-0 w-1.5 h-full bg-yellow-500 -translate-x-1/2 z-10 shadow-sm"></div>
+                <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 z-0">
+                  <button onClick={() => handleSelection('Norte', 'Oeste')} disabled={status === 'correct'} className="hover:bg-blue-300/40 p-4">{status === 'correct' && currentMission.lat === 'Norte' && currentMission.lon === 'Oeste' && (<span className="text-5xl animate-bounce">{currentMission.emoji}</span>)}</button>
+                  <button onClick={() => handleSelection('Norte', 'Este')} disabled={status === 'correct'} className="hover:bg-blue-300/40 p-4">{status === 'correct' && currentMission.lat === 'Norte' && currentMission.lon === 'Este' && (<span className="text-5xl animate-bounce">{currentMission.emoji}</span>)}</button>
+                  <button onClick={() => handleSelection('Sur', 'Oeste')} disabled={status === 'correct'} className="hover:bg-blue-300/40 p-4">{status === 'correct' && currentMission.lat === 'Sur' && currentMission.lon === 'Oeste' && (<span className="text-5xl animate-bounce">{currentMission.emoji}</span>)}</button>
+                  <button onClick={() => handleSelection('Sur', 'Este')} disabled={status === 'correct'} className="hover:bg-blue-300/40 p-4">{status === 'correct' && currentMission.lat === 'Sur' && currentMission.lon === 'Este' && (<span className="text-5xl animate-bounce">{currentMission.emoji}</span>)}</button>
+                </div>
+              </div>
+              <p className={`text-center font-bold h-8 ${status === 'correct' ? 'text-green-600' : 'text-gray-600'}`}>{message}</p>
+            </div>
+          );
+        }
+
+        function GameTimeZones3D() {
+          const [rotation, setRotation] = useState(0);
+          const rotateEarth = () => setRotation(prev => prev + 90); 
+          const normalize = (angle) => ((angle % 360) + 360) % 360;
+          const cGlobal = normalize(rotation + 90); const jGlobal = normalize(rotation + 270);
+          const isDayInChile = cGlobal > 0 && cGlobal < 180; const isDayInJapan = jGlobal > 0 && jGlobal < 180;
+
+          return (
+            <div className="bg-slate-900 rounded-3xl p-6 shadow-xl border-t-8 border-indigo-500 text-white overflow-hidden relative">
+              <h3 className="text-2xl font-black mb-4 text-center text-indigo-300">El Baile de los Meridianos</h3>
+              <div className="flex flex-col items-center justify-center gap-12 mb-8 relative z-10">
+                <div className="relative flex justify-center items-center w-full">
+                  <div className="absolute right-0 sm:-right-8 top-1/2 -translate-y-1/2 z-20"><span className="text-7xl animate-pulse">☀️</span></div>
+                  <div className="relative w-56 h-56 perspective-[1000px]">
+                    <div className="absolute inset-0 rounded-full bg-blue-600 shadow-[inset_40px_0_60px_rgba(0,0,0,0.9)]"></div>
+                    <div className="absolute inset-0 transition-transform duration-1000 ease-in-out" style={{ transformStyle: 'preserve-3d', transform: `rotateY(${rotation}deg)` }}>
+                      <div className="absolute top-[60%] left-1/2 transition-opacity duration-1000" style={{ transform: `translate(-50%, -50%) rotateY(90deg) translateZ(112px)` }}>🇨🇱</div>
+                      <div className="absolute top-[30%] left-1/2 transition-opacity duration-1000" style={{ transform: `translate(-50%, -50%) rotateY(270deg) translateZ(112px)` }}>🇯🇵</div>
+                    </div>
+                    <div className="absolute inset-0 rounded-full shadow-[inset_40px_0_60px_rgba(0,0,0,0.6)] pointer-events-none"></div>
+                  </div>
+                </div>
+                <div className="w-full max-w-md text-center">
+                  <div className="grid grid-cols-2 gap-4 w-full mb-6">
+                    <div className={`p-4 rounded-2xl ${isDayInChile ? 'bg-sky-200 text-sky-900' : 'bg-slate-800 text-slate-300'}`}><p className="font-black">🇨🇱 Chile</p><div className="text-4xl">{isDayInChile ? '☀️' : '🌙'}</div></div>
+                    <div className={`p-4 rounded-2xl ${isDayInJapan ? 'bg-sky-200 text-sky-900' : 'bg-slate-800 text-slate-300'}`}><p className="font-black">🇯🇵 Japón</p><div className="text-4xl">{isDayInJapan ? '☀️' : '🌙'}</div></div>
+                  </div>
+                  <button onClick={rotateEarth} className="w-full py-4 bg-indigo-500 rounded-full font-black text-xl hover:bg-indigo-400 transition-all">Girar la Tierra 🌍</button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        /* --- MÓDULO 4: ZONAS CLIMÁTICAS --- */
+        function Module4({ Term, onBack, onWin }) {
+          const introText = "El clima no es igual en todos lados. En la Zona Cálida, cerca del Ecuador, los rayos del sol caen directos y hace calor todo el año. En la Zona Templada los rayos caen inclinados y hay cuatro estaciones. En la Zona Fría, en los polos, hace mucho hielo porque los rayos casi no llegan.";
+          return (
+            <div className="space-y-8">
+              <div className="bg-yellow-100 rounded-3xl p-6 border-4 border-yellow-200 relative">
+                <div className="absolute top-4 right-4"><SpeakButton text={introText} /></div>
+                <h2 className="text-3xl font-black text-yellow-600 mb-4 flex items-center gap-3"><ThermometerSun size={36} /> Zonas Climáticas</h2>
+                <div className="mt-8 space-y-6">
+                  <div className="bg-red-50 p-4 rounded-2xl border-l-8 border-red-500 shadow-md">
+                    <h4 className="font-black text-red-600 text-2xl mb-2">🥵 Zona Cálida</h4>
+                    <p>🇧🇷 Brasil, 🇨🇷 Costa Rica. Selvas, sabanas y mucho calor. Rayos <Term word="Perpendicular" />es.</p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-2xl border-l-8 border-green-500 shadow-md">
+                     <h4 className="font-black text-green-600 text-2xl mb-2">😎 Zona Templada</h4>
+                     <p>🇨🇱 Chile, 🇪🇸 España. Cuatro estaciones marcadas. Rayos <Term word="Oblicuo" />s.</p>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-2xl border-l-8 border-blue-500 shadow-md">
+                     <h4 className="font-black text-blue-600 text-2xl mb-2">🥶 Zona Fría</h4>
+                     <p>🇦🇶 Antártica, 🇨🇦 Canadá. Hielo, osos polares. Casi no llega el Sol.</p>
+                  </div>
+                </div>
+              </div>
+              <GameZones onWin={onWin} />
+              <BackButton onBack={onBack} />
+            </div>
+          );
+        }
+
+        function GameZones({ onWin }) {
+          const initialDests = [
+            { id: 1, country: 'Brasil', flag: '🇧🇷', zone: 'Calida', status: 'pending' },
+            { id: 2, country: 'Canadá', flag: '🇨🇦', zone: 'Fria', status: 'pending' },
+            { id: 3, country: 'Chile', flag: '🇨🇱', zone: 'Templada', status: 'pending' }
+          ];
+          const [destinations, setDestinations] = useState(initialDests);
+          
+          const putInZone = (id, zone) => {
+            const dest = destinations.find(d => d.id === id);
+            if(dest.zone === zone) {
+              const newDests = destinations.map(d => d.id === id ? { ...d, status: 'correct' } : d);
+              setDestinations(newDests);
+              if(newDests.every(d => d.status === 'correct')) if(onWin) onWin();
+            }
+          };
+
+          const isWin = destinations.every(d => d.status === 'correct');
+
+          return (
+            <div className="bg-slate-100 rounded-3xl p-6 shadow-2xl border-t-8 border-indigo-500 mt-8">
+              <h3 className="text-3xl font-black mb-6 text-center text-indigo-900">✈️ Agencia de Viajes</h3>
+              {!isWin ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {destinations.filter(d => d.status === 'pending').map(dest => (
+                    <div key={dest.id} className="bg-white rounded-2xl p-4 shadow-md text-center border-2 border-indigo-200">
+                      <span className="text-6xl">{dest.flag}</span>
+                      <h4 className="text-xl font-bold mt-2 mb-4">{dest.country}</h4>
+                      <button onClick={() => putInZone(dest.id, 'Calida')} className="w-full bg-red-100 text-red-700 font-bold py-2 mb-2 rounded">Traje de baño</button>
+                      <button onClick={() => putInZone(dest.id, 'Templada')} className="w-full bg-green-100 text-green-700 font-bold py-2 mb-2 rounded">Chaqueta</button>
+                      <button onClick={() => putInZone(dest.id, 'Fria')} className="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded">Abrigo Polar</button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-8 bg-indigo-500 text-white rounded-3xl"><h4 className="text-4xl font-black">¡Maletas Listas! 🧳🌍</h4></div>
+              )}
+            </div>
+          );
+        }
+
+        /* --- DIPLOMA DE GRADUACIÓN --- */
+        function Diploma({ onBack }) {
+          const [name, setName] = useState('');
+          const [showDiploma, setShowDiploma] = useState(false);
+
+          return (
+            <div className="bg-white rounded-3xl p-6 md:p-12 shadow-2xl border-t-8 border-purple-600 text-center animate-in zoom-in">
+              {!showDiploma ? (
+                <div>
+                  <h2 className="text-4xl font-black text-purple-700 mb-6">¡Felicidades Explorador! 🎉</h2>
+                  <p className="text-xl text-gray-700 mb-8">Has completado todas las misiones. Escribe tu nombre para recibir tu diploma oficial:</p>
+                  <input 
+                    type="text" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    placeholder="Tu Nombre Aquí" 
+                    className="w-full max-w-sm px-6 py-4 text-2xl font-bold text-center border-4 border-purple-200 rounded-2xl mb-8 focus:outline-none focus:border-purple-500"
+                  />
+                  <br/>
+                  <button 
+                    onClick={() => { if(name.trim().length > 0) setShowDiploma(true); }}
+                    className="px-10 py-4 bg-purple-600 text-white rounded-full font-black text-xl hover:bg-purple-500 transition-transform hover:scale-105"
+                  >
+                    Obtener mi Diploma
+                  </button>
+                </div>
+              ) : (
+                <div className="relative bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] bg-[#fffdf0] border-[16px] border-double border-amber-600 p-8 md:p-16 rounded-lg shadow-2xl overflow-hidden">
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-50 text-3xl">
+                     <span className="absolute top-0 left-[10%] animate-[bounce_4s_infinite]">🎉</span>
+                     <span className="absolute top-0 left-[50%] animate-[bounce_3s_infinite_0.5s]">🌍</span>
+                     <span className="absolute top-0 left-[80%] animate-[bounce_5s_infinite_1s]">✨</span>
+                  </div>
+                  
+                  <Globe2 size={64} className="text-amber-800 mx-auto mb-6" />
+                  <h1 className="text-5xl md:text-6xl font-black text-amber-900 mb-2 font-serif">DIPLOMA</h1>
+                  <h2 className="text-2xl text-amber-700 font-bold mb-10 tracking-widest uppercase">De Explorador Cartográfico</h2>
+                  <p className="text-xl text-stone-800 italic mb-4">Se certifica con honores que:</p>
+                  <p className="text-5xl font-bold text-blue-900 border-b-4 border-amber-800 inline-block px-12 pb-2 mb-10 font-serif">{name}</p>
+                  <p className="text-xl text-stone-800 font-medium leading-relaxed max-w-2xl mx-auto">
+                    Ha demostrado una gran valentía e inteligencia completando con éxito todos los desafíos sobre Puntos Cardinales, Cuadrículas, Paralelos, Meridianos y Zonas Climáticas.
+                  </p>
+                  <div className="mt-16 flex justify-around items-center border-t-2 border-amber-800/20 pt-8">
+                    <div className="text-center">
+                      <Compass size={48} className="text-amber-800 mx-auto mb-2 opacity-50" />
+                      <p className="font-bold text-amber-900">Sello de Excelencia</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <BackButton onBack={onBack} />
+            </div>
+          );
+        }
+
+        function BackButton({ onBack }) {
+          return (
+            <button onClick={onBack} className="mt-8 w-full py-4 bg-gray-800 text-white font-black rounded-2xl text-xl hover:bg-gray-700 hover:shadow-lg transition-all flex items-center justify-center gap-3">
+              <ArrowLeft size={28} /> Volver al Menú Principal
+            </button>
+          );
+        }
+
+        // --- RENDER DE LA APLICACIÓN ---
+        const rootElement = document.getElementById('root');
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(<App />);
+    </script>
+</body>
+</html>
