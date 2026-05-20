@@ -30,7 +30,7 @@
 
     <script type="text/babel">
         // 1. EXTRAER HOOKS DE REACT
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef, useCallback } = React;
 
         // 2. REEMPLAZO DE ICONOS DE LUCIDE-REACT POR EMOJIS
         const createEmojiIcon = (emoji) => ({ size = 24, className = '' }) => (
@@ -86,7 +86,7 @@
           
           // SISTEMA DE PROGRESO Y MEDALLAS
           const [completedModules, setCompletedModules] = useState({
-            mod1: false, mod2: false, mod3: false, mod4: false
+            mod1: false, mod2: false, mod3: false, mod4: false, mod5: false
           });
 
           const markCompleted = (modId) => {
@@ -140,6 +140,7 @@
                     {currentModule === 'mod2' && <Module2 Term={Term} onBack={goBack} onWin={() => markCompleted('mod2')} />}
                     {currentModule === 'mod3' && <Module3 Term={Term} onBack={goBack} onWin={() => markCompleted('mod3')} />}
                     {currentModule === 'mod4' && <Module4 Term={Term} onBack={goBack} onWin={() => markCompleted('mod4')} />}
+                    {currentModule === 'mod5' && <Module5 Term={Term} onBack={goBack} onWin={() => markCompleted('mod5')} />}
                     {currentModule === 'diploma' && <Diploma onBack={goBack} />}
                   </div>
                 )}
@@ -191,6 +192,7 @@
             { id: 'mod2', title: 'Cuadrículas', icon: Grid3X3, color: 'bg-blue-500', shadow: 'shadow-blue-200', text: 'Encuentra tesoros en el mapa', medalEmoji: '⚓' },
             { id: 'mod3', title: 'Líneas Invisibles', icon: Globe2, color: 'bg-green-500', shadow: 'shadow-green-200', text: 'Descubre paralelos y meridianos', medalEmoji: '🌍' },
             { id: 'mod4', title: 'Zonas Climáticas', icon: ThermometerSun, color: 'bg-yellow-500', shadow: 'shadow-yellow-200', text: 'Viaja del calor al frío', medalEmoji: '🌡️' },
+            { id: 'mod5', title: 'Globo Terráqueo', icon: Globe2, color: 'bg-indigo-600', shadow: 'shadow-indigo-200', text: 'Explora el planeta en 3D', medalEmoji: '🌐' },
           ];
 
           return (
@@ -838,6 +840,344 @@
               ) : (
                 <div className="text-center p-8 bg-indigo-500 text-white rounded-3xl"><h4 className="text-4xl font-black">¡Maletas Listas! 🧳🌍</h4></div>
               )}
+            </div>
+          );
+        }
+
+        /* ===== MÓDULO 5: GLOBO TERRÁQUEO INTERACTIVO ===== */
+
+        const CONTINENTS_DATA = [
+          { id: 'na', name: 'América del Norte', fill: '#4CAF50', stroke: '#2E7D32', emoji: '🦅',
+            coords: [[-168,72],[-140,72],[-120,78],[-85,82],[-55,50],[-67,44],[-70,42],[-75,35],[-80,25],[-87,15],[-75,8],[-80,8],[-85,10],[-90,14],[-100,19],[-110,25],[-117,32],[-120,40],[-124,48],[-135,58],[-145,60],[-160,55],[-168,60],[-168,72]] },
+          { id: 'sa', name: 'América del Sur', fill: '#66BB6A', stroke: '#1B5E20', emoji: '🦜',
+            coords: [[-80,12],[-62,12],[-52,5],[-50,-4],[-36,-10],[-38,-20],[-44,-24],[-48,-28],[-53,-33],[-58,-38],[-66,-55],[-68,-55],[-72,-45],[-75,-40],[-74,-36],[-68,-22],[-70,-18],[-76,-12],[-80,-5],[-80,12]] },
+          { id: 'eu', name: 'Europa', fill: '#42A5F5', stroke: '#0D47A1', emoji: '🏰',
+            coords: [[-10,36],[5,36],[20,36],[30,36],[40,42],[40,50],[30,55],[25,60],[28,68],[20,72],[10,58],[5,52],[0,48],[-5,44],[-10,42],[-10,36]] },
+          { id: 'af', name: 'África', fill: '#FFA726', stroke: '#E65100', emoji: '🦁',
+            coords: [[-18,16],[-14,10],[-10,5],[0,5],[10,5],[15,-5],[20,-18],[30,-30],[32,-35],[40,-12],[45,12],[50,12],[44,12],[40,15],[38,20],[40,22],[38,28],[30,32],[25,32],[15,38],[12,38],[0,30],[-10,30],[-18,22],[-18,16]] },
+          { id: 'as', name: 'Asia', fill: '#CE93D8', stroke: '#6A1B9A', emoji: '🐼',
+            coords: [[25,40],[30,45],[25,60],[35,70],[60,75],[100,78],[140,72],[160,70],[170,60],[145,45],[140,38],[135,32],[130,25],[115,20],[100,3],[105,20],[115,28],[120,38],[135,42],[140,30],[130,22],[125,12],[120,4],[100,5],[90,12],[80,8],[72,20],[68,22],[60,22],[57,24],[55,30],[60,40],[45,40],[40,35],[35,36],[28,38],[25,40]] },
+          { id: 'oc', name: 'Oceanía', fill: '#FF8A65', stroke: '#BF360C', emoji: '🦘',
+            coords: [[114,-22],[114,-34],[125,-34],[134,-32],[138,-35],[145,-38],[150,-38],[154,-28],[150,-22],[145,-18],[138,-12],[130,-12],[125,-16],[120,-20],[114,-22]] },
+          { id: 'an', name: 'Antártida', fill: '#CFD8DC', stroke: '#455A64', emoji: '🐧',
+            coords: [[-180,-70],[-165,-70],[-150,-70],[-135,-70],[-120,-70],[-105,-70],[-90,-70],[-75,-70],[-60,-70],[-45,-70],[-30,-70],[-15,-70],[0,-70],[15,-70],[30,-70],[45,-70],[60,-70],[75,-70],[90,-70],[105,-70],[120,-70],[135,-70],[150,-70],[165,-70],[180,-70]] },
+        ];
+
+        const CITIES_DATA = [
+          { name: 'Madrid', lon: -3.7, lat: 40.4 },
+          { name: 'Santiago', lon: -70.7, lat: -33.4 },
+          { name: 'Tokio', lon: 139.7, lat: 35.7 },
+          { name: 'El Cairo', lon: 31.2, lat: 30.1 },
+          { name: 'Sídney', lon: 151.2, lat: -33.9 },
+          { name: 'Nueva York', lon: -74.0, lat: 40.7 },
+          { name: 'Lagos', lon: 3.4, lat: 6.5 },
+          { name: 'Pekín', lon: 116.4, lat: 39.9 },
+        ];
+
+        function geoProject(lon, lat, centerLon, centerLat, R, cx, cy) {
+          const λ = (lon - centerLon) * Math.PI / 180;
+          const φ = lat * Math.PI / 180;
+          const φ0 = centerLat * Math.PI / 180;
+          const cosC = Math.sin(φ0) * Math.sin(φ) + Math.cos(φ0) * Math.cos(φ) * Math.cos(λ);
+          if (cosC < 0) return null;
+          return {
+            x: cx + R * Math.cos(φ) * Math.sin(λ),
+            y: cy - R * (Math.cos(φ0) * Math.sin(φ) - Math.sin(φ0) * Math.cos(φ) * Math.cos(λ)),
+            z: cosC,
+          };
+        }
+
+        function _drawGeoLine(ctx, value, isParallel, proj) {
+          ctx.beginPath();
+          let first = true;
+          const steps = isParallel ? 73 : 37;
+          for (let i = 0; i <= steps; i++) {
+            const lon = isParallel ? -180 + i * 5 : value;
+            const lat = isParallel ? value : -90 + i * 5;
+            const pt = proj(lon, lat);
+            if (pt) { first ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y); first = false; }
+            else { first = true; }
+          }
+          ctx.stroke();
+        }
+
+        function _drawContinent(ctx, cont, proj, isHL) {
+          const pts = cont.coords.map(([lo, la]) => proj(lo, la));
+          if (!pts.some(Boolean)) return;
+          ctx.beginPath();
+          let penDown = false;
+          for (const pt of pts) {
+            if (pt) { if (!penDown) { ctx.moveTo(pt.x, pt.y); penDown = true; } else ctx.lineTo(pt.x, pt.y); }
+            else { penDown = false; }
+          }
+          ctx.closePath();
+          ctx.fillStyle = isHL ? '#FFD700' : cont.fill;
+          ctx.fill();
+          ctx.strokeStyle = isHL ? '#FF8C00' : cont.stroke;
+          ctx.lineWidth = isHL ? 2.5 : 1;
+          ctx.stroke();
+        }
+
+        function drawGlobeScene(canvas, rotLon, rotLat, highlighted) {
+          const ctx = canvas.getContext('2d');
+          const w = canvas.width, h = canvas.height;
+          const cx = w / 2, cy = h / 2;
+          const R = Math.min(w, h) / 2 - 6;
+          const proj = (lo, la) => geoProject(lo, la, rotLon, rotLat, R, cx, cy);
+
+          ctx.clearRect(0, 0, w, h);
+
+          const oceanGrad = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.25, R * 0.05, cx, cy, R);
+          oceanGrad.addColorStop(0, '#1E88E5');
+          oceanGrad.addColorStop(1, '#0D47A1');
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+          ctx.fillStyle = oceanGrad; ctx.fill();
+
+          ctx.save();
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
+
+          ctx.strokeStyle = 'rgba(100,160,255,0.15)'; ctx.lineWidth = 0.5;
+          for (let la = -90; la <= 90; la += 30) _drawGeoLine(ctx, la, true, proj);
+          for (let lo = -180; lo < 180; lo += 30) _drawGeoLine(ctx, lo, false, proj);
+
+          const specialLines = [
+            { lat: 0, color: 'rgba(255,80,80,0.85)', w: 2.5 },
+            { lat: 23.5, color: 'rgba(255,160,0,0.75)', w: 1.8 },
+            { lat: -23.5, color: 'rgba(255,160,0,0.75)', w: 1.8 },
+            { lat: 66.5, color: 'rgba(80,200,255,0.75)', w: 1.8 },
+            { lat: -66.5, color: 'rgba(80,200,255,0.75)', w: 1.8 },
+          ];
+          for (const sl of specialLines) {
+            ctx.strokeStyle = sl.color; ctx.lineWidth = sl.w;
+            _drawGeoLine(ctx, sl.lat, true, proj);
+          }
+
+          for (const cont of CONTINENTS_DATA) {
+            _drawContinent(ctx, cont, proj, highlighted === cont.id);
+          }
+
+          ctx.fillStyle = 'white'; ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1.2;
+          for (const city of CITIES_DATA) {
+            const pt = proj(city.lon, city.lat);
+            if (pt && pt.z > 0.15) {
+              ctx.beginPath(); ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2);
+              ctx.fill(); ctx.stroke();
+            }
+          }
+
+          ctx.restore();
+
+          const atmosGrad = ctx.createRadialGradient(cx, cy, R * 0.78, cx, cy, R * 1.06);
+          atmosGrad.addColorStop(0, 'rgba(100,180,255,0)');
+          atmosGrad.addColorStop(1, 'rgba(100,180,255,0.38)');
+          ctx.beginPath(); ctx.arc(cx, cy, R * 1.03, 0, Math.PI * 2);
+          ctx.fillStyle = atmosGrad; ctx.fill();
+
+          const specGrad = ctx.createRadialGradient(cx - R * 0.32, cy - R * 0.38, 0, cx, cy, R);
+          specGrad.addColorStop(0, 'rgba(255,255,255,0.28)');
+          specGrad.addColorStop(0.55, 'rgba(255,255,255,0)');
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+          ctx.fillStyle = specGrad; ctx.fill();
+
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(100,180,255,0.5)'; ctx.lineWidth = 2; ctx.stroke();
+        }
+
+        function GlobeCanvas({ highlighted }) {
+          const canvasRef = useRef(null);
+          const [rotation, setRotation] = useState({ lon: -20, lat: 25 });
+          const dragRef = useRef(null);
+
+          useEffect(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            drawGlobeScene(canvas, rotation.lon, rotation.lat, highlighted);
+          }, [rotation, highlighted]);
+
+          const startDrag = (clientX, clientY) => {
+            dragRef.current = { startX: clientX, startY: clientY, startLon: rotation.lon, startLat: rotation.lat };
+          };
+          const moveDrag = (clientX, clientY) => {
+            if (!dragRef.current) return;
+            const dx = clientX - dragRef.current.startX;
+            const dy = clientY - dragRef.current.startY;
+            setRotation({
+              lon: dragRef.current.startLon + dx * 0.4,
+              lat: Math.max(-85, Math.min(85, dragRef.current.startLat - dy * 0.4)),
+            });
+          };
+          const endDrag = () => { dragRef.current = null; };
+
+          return (
+            <div className="flex flex-col items-center gap-3">
+              <canvas
+                ref={canvasRef}
+                width={360} height={360}
+                className="cursor-grab active:cursor-grabbing touch-none"
+                style={{ maxWidth: '100%', borderRadius: '50%', boxShadow: '0 0 50px rgba(30,100,255,0.5)' }}
+                onMouseDown={e => startDrag(e.clientX, e.clientY)}
+                onMouseMove={e => moveDrag(e.clientX, e.clientY)}
+                onMouseUp={endDrag} onMouseLeave={endDrag}
+                onTouchStart={e => { e.preventDefault(); startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
+                onTouchMove={e => { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); }}
+                onTouchEnd={endDrag}
+              />
+              <p className="text-blue-200 text-sm font-medium tracking-wide">👆 Arrastra para girar el globo</p>
+            </div>
+          );
+        }
+
+        function GlobeLegend() {
+          const items = [
+            { cls: 'bg-red-500', label: 'Ecuador (0°)' },
+            { cls: 'bg-orange-400', label: 'Trópicos (±23.5°)' },
+            { cls: 'bg-sky-400', label: 'Círculos Polares (±66.5°)' },
+          ];
+          return (
+            <div className="flex flex-wrap justify-center gap-4 mt-4">
+              {items.map(item => (
+                <div key={item.label} className="flex items-center gap-2">
+                  <div className={`w-7 h-2 rounded-full ${item.cls}`}></div>
+                  <span className="text-xs font-semibold text-blue-100">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        function ContinentQuiz({ onWin, onHighlight }) {
+          const quizList = CONTINENTS_DATA.filter(c => c.id !== 'an');
+
+          const makeOptions = (correctName) => {
+            const pool = CONTINENTS_DATA.filter(c => c.name !== correctName && c.id !== 'an');
+            const others = [...pool].sort(() => Math.random() - 0.5).slice(0, 3).map(c => c.name);
+            return [correctName, ...others].sort(() => Math.random() - 0.5);
+          };
+
+          const [qIndex, setQIndex] = useState(0);
+          const [options, setOptions] = useState(() => makeOptions(quizList[0].name));
+          const [feedback, setFeedback] = useState('');
+          const [answered, setAnswered] = useState(false);
+          const [score, setScore] = useState(0);
+          const [done, setDone] = useState(false);
+
+          const currentQ = quizList[qIndex];
+
+          useEffect(() => {
+            if (onHighlight) onHighlight(currentQ.id);
+          }, [qIndex]);
+
+          const handleAnswer = (answer) => {
+            if (answered) return;
+            const ok = answer === currentQ.name;
+            setAnswered(true);
+            setFeedback(ok ? '¡Correcto! 🎉' : `Era ${currentQ.name} 😅`);
+            if (ok) setScore(s => s + 1);
+            setTimeout(() => {
+              if (qIndex < quizList.length - 1) {
+                const next = qIndex + 1;
+                setQIndex(next);
+                setOptions(makeOptions(quizList[next].name));
+                setAnswered(false);
+                setFeedback('');
+              } else {
+                setDone(true);
+                if (onHighlight) onHighlight(null);
+                if (onWin) onWin();
+              }
+            }, 1800);
+          };
+
+          if (done) return (
+            <div className="text-center p-8 bg-gradient-to-b from-yellow-300 to-amber-500 rounded-3xl border-4 border-yellow-600 shadow-2xl animate-in zoom-in">
+              <div className="text-5xl mb-3">🌍🏆🌎</div>
+              <h4 className="text-3xl font-black text-yellow-900">¡Quiz Completado!</h4>
+              <p className="text-xl font-bold text-yellow-800 mt-2">{score} / {quizList.length} respuestas correctas</p>
+            </div>
+          );
+
+          return (
+            <div className="bg-white rounded-3xl p-6 shadow-xl border-t-8 border-indigo-600">
+              <h3 className="text-2xl font-black text-center text-indigo-900 mb-1">🔍 Detective de Continentes</h3>
+              <p className="text-center text-gray-400 text-sm mb-5">Pregunta {qIndex + 1} de {quizList.length}</p>
+
+              <div className="bg-indigo-50 rounded-2xl p-4 mb-5 text-center border-2 border-indigo-100">
+                <p className="text-lg font-bold text-indigo-800">
+                  El continente dorado {currentQ.emoji} en el globo se llama...
+                </p>
+                <p className="text-sm text-gray-400 mt-1">Gira el globo si no puedes verlo bien</p>
+              </div>
+
+              {feedback && (
+                <p className={`text-center font-black text-xl mb-4 animate-bounce ${feedback.includes('Correcto') ? 'text-green-600' : 'text-orange-500'}`}>
+                  {feedback}
+                </p>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                {options.map(opt => (
+                  <button
+                    key={opt}
+                    onClick={() => handleAnswer(opt)}
+                    disabled={answered}
+                    className={[
+                      'py-4 px-3 rounded-2xl font-bold text-sm border-2 transition-all active:scale-95',
+                      answered && opt === currentQ.name ? 'bg-green-500 text-white border-green-600' : '',
+                      answered && opt !== currentQ.name ? 'bg-gray-100 text-gray-400 border-gray-200' : '',
+                      !answered ? 'bg-indigo-100 text-indigo-800 border-indigo-300 hover:bg-indigo-200' : '',
+                    ].join(' ')}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        function Module5({ Term, onBack, onWin }) {
+          const [highlighted, setHighlighted] = useState(null);
+          const introText = "El globo terráqueo es la representación más fiel de nuestro planeta. Puedes girarlo con el dedo para ver todos los continentes. Las líneas de colores que ves son el Ecuador en rojo, los Trópicos en naranja y los Círculos Polares en azul.";
+
+          return (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-3xl p-6 border-4 border-blue-600 text-white relative">
+                <div className="absolute top-4 right-4"><SpeakButton text={introText} /></div>
+                <h2 className="text-3xl font-black mb-3 flex items-center gap-3">🌐 Globo Terráqueo</h2>
+                <p className="text-blue-100 text-lg leading-relaxed pr-10">
+                  ¡Explora nuestro planeta girándolo con el dedo! Busca los <Term word="Paralelos" /> y <Term word="Meridianos" /> de colores y descubre los 7 continentes.
+                </p>
+              </div>
+
+              <div className="bg-slate-900 rounded-3xl p-6 shadow-2xl">
+                <GlobeCanvas highlighted={highlighted} />
+                <GlobeLegend />
+              </div>
+
+              <div className="bg-white rounded-3xl p-5 shadow-md border border-gray-100">
+                <h3 className="font-black text-lg text-gray-800 mb-4">🗺️ Los 7 Continentes</h3>
+                <p className="text-sm text-gray-500 mb-3">Toca o pasa el cursor para iluminar en el globo:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {CONTINENTS_DATA.map(c => (
+                    <button
+                      key={c.id}
+                      onMouseEnter={() => setHighlighted(c.id)}
+                      onMouseLeave={() => setHighlighted(null)}
+                      onTouchStart={() => setHighlighted(prev => prev === c.id ? null : c.id)}
+                      onClick={() => setHighlighted(prev => prev === c.id ? null : c.id)}
+                      className={`flex items-center gap-2 p-3 rounded-xl transition-all text-left border-l-4 ${highlighted === c.id ? 'bg-yellow-50 shadow-md scale-105' : 'bg-gray-50 hover:bg-gray-100'}`}
+                      style={{ borderLeftColor: c.stroke }}
+                    >
+                      <span className="text-2xl">{c.emoji}</span>
+                      <span className="text-sm font-bold text-gray-700 leading-tight">{c.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <ContinentQuiz onWin={onWin} onHighlight={setHighlighted} />
+
+              <BackButton onBack={onBack} />
             </div>
           );
         }
